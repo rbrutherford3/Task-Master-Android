@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Task Master</string>
+    <string name="task_entry_hint">Enter New Task Here</string>
+    <string name="importance_label_low">Low</string>
+    <string name="importance_label">Importance</string>
+    <string name="importance_label_high">High</string>
+    <string name="urgency_label_low">Low</string>
+    <string name="urgency_label">Urgency</string>
+    <string name="urgency_label_high">High</string>
+    <string name="submit_new_task">Add Task</string>
+</resources>
