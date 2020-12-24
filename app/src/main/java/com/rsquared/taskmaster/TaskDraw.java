@@ -167,6 +167,9 @@ public class TaskDraw extends View {
                     (int) xText + layoutWidth,
                     (int) (yBaseline + layoutLowest));
 
+        // Increase the touch area a little bit for smoother response
+        touchArea.inset(-margin, -margin);
+
         // Update measurements in taskViewModel (so they don't have to be recalculated on drawing)
         long id = task.getID();
         taskViewModel.setBaseline(id, yBaseline);
@@ -241,7 +244,6 @@ public class TaskDraw extends View {
             // Grab the pre-determined touch area and widen it a little
             long id = task.getID();
             Rect touchArea = taskViewModel.getTouchArea(id);
-            touchArea.inset(-rectSide, -rectSide);
 
             // If the tap coordinates were inside the touch area for a task, then save the task
             if (touchArea.contains((int)x, (int)y))
