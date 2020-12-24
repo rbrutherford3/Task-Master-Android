@@ -49,10 +49,7 @@ public final class TaskDatabaseContract {
         public static final String QUERY_TABLE_INCOMPLETE = "SELECT * FROM " + TABLE_NAME + " WHERE "
                 + COLUMN_NAME_COMPLETED + "=0";
 
-        // Update the task, mark as "completed"
-        @Contract(pure = true)
-        public static @NotNull String update(long id) {return "UPDATE " + TABLE_NAME + " SET " +
-                COLUMN_NAME_COMPLETED + "=1 WHERE " + _ID + "=" + id;}
+        public static final String ID_CLAUSE = _ID + "=?";
 
         // Get an individual task from the database using the id
         @Contract(pure = true)

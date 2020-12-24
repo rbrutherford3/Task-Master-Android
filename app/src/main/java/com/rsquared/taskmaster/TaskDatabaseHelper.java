@@ -61,12 +61,14 @@ public class TaskDatabaseHelper extends SQLiteOpenHelper {
     }
 
     // Update a task as 'COMPLETED' after pressing check mark
-    public void updateTask(@NotNull Task completedTask) {
-        // Create insert entries
+    public void updateTask(@NotNull Task task, boolean completed) {
+
+        SQLiteDatabase dbw = getWritableDatabase();
+
         ContentValues values = new ContentValues();
-        values.put(COLUMN_NAME_COMPLETED, true);
-        getWritableDatabase().update(TABLE_NAME, values,
-                "_ID=?", new String[]{Long.toString(completedTask.getID())});
+        values.put(COLUMN_NAME_COMPLETED, completed);
+
+        dbw.update(TABLE_NAME, values, ID_CLAUSE, new String[]{Long.toString(task.getID())});
     }
 
     // Get a particular task (using id) in the database

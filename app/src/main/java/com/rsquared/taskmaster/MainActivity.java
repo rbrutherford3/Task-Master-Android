@@ -156,14 +156,16 @@ public class MainActivity extends AppCompatActivity {
         // Whenever the checkbox inside the popup is touched...
         checkBoxPopup.setOnClickListener((View view) -> {
 
+            // Store status of checkbox
+            boolean completed = checkBoxPopup.isChecked();
+
             // Update the task held in locally saved data and also database
             Task completedTask = taskViewModel.getCompletedTask();
-            completedTask.setCompleted(true);
-            taskDatabaseHelper.updateTask(completedTask);
+            completedTask.setCompleted(completed);
+            taskDatabaseHelper.updateTask(completedTask, completed);
 
-            // Hide popup, reset checkbox, force redraw
+            // Hide popup and redraw tasks
             linearLayoutPopup.setVisibility(View.INVISIBLE);
-            checkBoxPopup.setChecked(false);
             taskDraw.invalidate();
         });
 
