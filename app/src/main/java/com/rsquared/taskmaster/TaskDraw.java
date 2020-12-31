@@ -8,9 +8,12 @@ import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.view.View;
 
+import com.rsquared.taskmaster.TaskViewModel.TaskGraphic;
+
 import java.util.ArrayList;
 
 //todo: fitting items together in a crowded area
+//todo: image formatting (border, margin, shadow, etc)
 
 // Class to perform all graphic operations (drawing on canvas, etc)
 public class TaskDraw extends View {
@@ -64,7 +67,7 @@ public class TaskDraw extends View {
         paintRect.setStrokeCap(Paint.Cap.ROUND);
 
         paintCheckBox = new Paint(paintRect);
-        paintCheckBox.setStrokeWidth(strokeWidth*2);
+        paintCheckBox.setStrokeWidth(strokeWidth * 2);
     }
 
     // Set up text paint object with color and size
@@ -93,7 +96,7 @@ public class TaskDraw extends View {
 
     // Function to determine the absolute distance position on the urgency vs importance graphic
     public float[] getPixelCoordinates(Task task) {
-        float [] percentCoordinates = getPercentCoordinates(task);
+        float[] percentCoordinates = getPercentCoordinates(task);
         float x = percentCoordinates[0] * this.getWidth();
         float y = percentCoordinates[1] * this.getHeight();
         return new float[]{x, y};
@@ -103,13 +106,13 @@ public class TaskDraw extends View {
 
     // Function to get all the necessary dimensions for the task label, check box, and check mark.
     // These metrics are stored in hash maps in taskViewModel to be pulled during an 'ondraw()' call
-    public void initTask(Task task) {
+    public TaskGraphic setGraphics(Task task) {
 
         // Get the position on the canvas for the given task
         float[] coordinates = getPixelCoordinates(task);
         float xCheckbox = coordinates[0]; // The horizontal position of the left side of the checkbox
         float yBaseline = coordinates[1]; // The vertical position of the baseline
-                                            // (lower edge of checkbox and baseline for text)
+        // (lower edge of checkbox and baseline for text)
 
         // Create the dimensions for the task text on the canvas
         Rect rectText = new Rect(); // Outlines the text
@@ -125,8 +128,7 @@ public class TaskDraw extends View {
         float layoutHighest;
         if (Math.abs(fontMetrics.top) > rectSide) {
             layoutHighest = Math.abs(fontMetrics.top);
-        }
-        else
+        } else
             layoutHighest = rectSide;
         float layoutLowest = Math.abs(fontMetrics.bottom);  // Text will always be lowest
 
@@ -145,8 +147,7 @@ public class TaskDraw extends View {
             if (xCheckbox + rectSide > width - margin)  // test checkbox without text
                 xCheckbox = width - margin - rectSide;
             xText = xCheckbox - margin - rectText.width();
-        }
-        else {
+        } else {
             if (xCheckbox < margin)
                 xCheckbox = margin;
             xText = xCheckbox + rectSide + margin;
@@ -171,23 +172,14 @@ public class TaskDraw extends View {
         touchArea.inset(-margin, -margin);
 
         // Update measurements in taskViewModel (so they don't have to be recalculated on drawing)
-        long id = task.getID();
-        taskViewModel.setBaseline(id, yBaseline);
-        taskViewModel.setTextStart(id, xText);
-        taskViewModel.setCheckBoxStart(id, xCheckbox);
-        taskViewModel.setTouchArea(id, touchArea);
-    }
 
-    // Initialize all the tasks at once (for beginning of program)
-    public void initTasks() {
-        for (Task task : taskViewModel.getTasks())
-            initTask(task);
+        return new TaskGraphic(yBaseline, xCheckbox, xText, touchArea);
     }
 
     // DRAW FUNCTION (THE HEART OF THE CLASS AND MAY BE CALLED VERY FREQUENTLY)
 
-    // Actually draw the elements onto the canvas (because this function has the potential to be
-    // called very frequently, we are not doing any calculations or large allocations here)
+    // Draw the elements onto the canvas (because this function has the potential to be
+    // called very frequently, no calculations or large allocations are performed here)
     protected void onDraw(Canvas canvas) {
 
         // Make sure teh taskViewModel exists (not too early in program)
@@ -196,10 +188,9 @@ public class TaskDraw extends View {
             for (Task task : taskViewModel.getTasks()) {
 
                 // Pull the pre-determined position information for the task
-                long id = task.getID();
-                float yBaseline = taskViewModel.getBaseline(id);
-                float xCheckbox = taskViewModel.getCheckBoxStart(id);
-                float xText = taskViewModel.getTextStart(id);
+                float yBaseline = taskViewModel.getTaskGraphic(task).getBaseline();
+                float xCheckbox = taskViewModel.getTaskGraphic(task).getCheckBoxStart();
+                float xText = taskViewModel.getTaskGraphic(task).getTextStart();
 
                 // Draw the checkbox in the pre-determined position
                 canvas.drawRect(xCheckbox,
@@ -233,7 +224,8 @@ public class TaskDraw extends View {
     // TOUCH RESPONSE FUNCTION (WHICH, IF ANY, TASK(S) WERE TOUCHED?)
 
     // This function returns a list of tasks that were touched by the user on the canvas
-    public ArrayList<Task> touchedTasks(float x, float y) {
+    // Todo: need to write code to handle multiple tasks in same location
+    public ArrayList<Task> getTouchedTasks(float x, float y) {
 
         // Store touched tasks here
         ArrayList<Task> touchedTasks = new ArrayList<>();
@@ -241,12 +233,12 @@ public class TaskDraw extends View {
         // Loop through all texts
         for (Task task : taskViewModel.getTasks()) {
 
-            // Grab the pre-determined touch area and widen it a little
+            // Grab the pre-determined touch area
             long id = task.getID();
-            Rect touchArea = taskViewModel.getTouchArea(id);
+            Rect touchArea = taskViewModel.getTaskGraphic(task).getTouchArea();
 
             // If the tap coordinates were inside the touch area for a task, then save the task
-            if (touchArea.contains((int)x, (int)y))
+            if (touchArea.contains((int) x, (int) y))
                 touchedTasks.add(task);
         }
         return touchedTasks;

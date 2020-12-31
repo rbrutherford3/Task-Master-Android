@@ -1,46 +1,151 @@
 package com.rsquared.taskmaster;
 
+import android.app.Application;
 import android.graphics.Rect;
 
-import androidx.lifecycle.ViewModel;
+import androidx.annotation.NonNull;
+import androidx.lifecycle.AndroidViewModel;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
-// View model class to hold all the information for individual tasks
-public class TaskViewModel extends ViewModel {
+// View model class to hold all the active tasks, plus update or read from database
+public class TaskViewModel extends AndroidViewModel {
 
-    // PRIVATE MEMBERS TO HOLD INFORMATION
-    
+    // Sub-class for information that is graphical in nature (coordinates, shapes)
+    public static class TaskGraphic {
+
+        // PRIVATE MEMBERS
+
+        private Float baseline;         // y-value of bottom of task text and checkbox
+        private Float checkBoxStart;    // x-value of the beginning (left side) of task checkbox
+        private Float textStart;        // x-value of the beginning of task text
+        private Rect touchArea;         // rectangular area around task graphic for touch response
+
+        // CONSTRUCTORS
+
+        public TaskGraphic() {
+        }
+
+        public TaskGraphic(Float baseline, Float checkBoxStart, Float textStart, Rect touchArea) {
+            this.baseline = baseline;
+            this.checkBoxStart = checkBoxStart;
+            this.textStart = textStart;
+            this.touchArea = touchArea;
+        }
+
+        // GETTER METHODS
+
+        public Float getBaseline() {
+            return baseline;
+        }
+
+        public Float getCheckBoxStart() {
+            return checkBoxStart;
+        }
+
+        public Float getTextStart() {
+            return textStart;
+        }
+
+        public Rect getTouchArea() {
+            return touchArea;
+        }
+
+        // SETTER METHODS
+
+        public void setBaseline(Float y) {
+            baseline = y;
+        }
+
+        public void setCheckBoxStart(Float x) {
+            checkBoxStart = x;
+        }
+
+        public void setTextStart(Float x) {
+            textStart = x;
+        }
+
+        public void setTouchArea(Rect area) {
+            touchArea = area;
+        }
+    }
+
+    // PRIVATE MEMBERS
+
     // List of tasks
-    private final ArrayList<Task> tasks = new ArrayList<>();
-    // Holds the task that pops up to be marked for completion
-    private Task completedTask;
-    // ***Hash maps to add supplemental graphics information for TaskDraw function***
-    // y-axis value of bottom of checkbox/text
-    private final HashMap<Long, Float> yBaselines = new HashMap<>();
-    // x-axis value of left side of checkbox
-    private final HashMap<Long, Float> xCheckBoxStarts = new HashMap<>();
-    // x-axis value of left side of text
-    private final HashMap<Long, Float> xTextStarts = new HashMap<>();
-    // derived rectangle object surrounding everything
-    private final HashMap<Long, Rect> touchAreas = new HashMap<>();
+    private ArrayList<Task> tasks = new ArrayList<>();
 
-    // GETTER FUNCTIONS (note that the key to the hash maps is the database ID)
+    // Hash maps to add supplemental graphics information for TaskDraw function
+    private HashMap<Task, TaskGraphic> taskGraphicsHash = new HashMap<>();
 
-    public ArrayList<Task> getTasks() {return this.tasks;}
-    public Task getCompletedTask() {return completedTask;}
-    public Float getBaseline(long id) {return yBaselines.get(id);}
-    public Float getCheckBoxStart(long id) {return xCheckBoxStarts.get(id);}
-    public Float getTextStart(long id) {return xTextStarts.get(id);}
-    public Rect getTouchArea(long id) {return touchAreas.get(id);}
+    // Database object
+    private final TaskDatabaseHelper taskDatabaseHelper = TaskDatabaseHelper.getInstance(this.getApplication());
 
-    // SETTER FUNCTIONS (note that the key to the hash maps is the database ID)
+    // An extra measure to assure that downloading data from the database only occurs once
+    private boolean addTasksLocked = false;
 
-    public void addTask(Task task) {this.tasks.add(task);}
-    public void setCompletedTask(Task completedTask) {this.completedTask = completedTask;}
-    public void setBaseline(long id, Float y) {this.yBaselines.put(id, y);}
-    public void setCheckBoxStart(long id, Float x) {this.xCheckBoxStarts.put(id, x);}
-    public void setTextStart(long id, Float x) {this.xTextStarts.put(id, x);}
-    public void setTouchArea(long id, Rect touchArea) {this.touchAreas.put(id, touchArea);}
+    // CONSTRUCTOR
+    public TaskViewModel(@NonNull Application application) {
+        super(application);
+    }
+
+    // GETTER FUNCTIONS
+
+    // retrieve task with matching ID (not used)
+    public Task getTask(long id) {
+        for (Task task : tasks) {
+            if (task.getID() == id)
+                return task;
+        }
+        return null;
+    }
+
+    public ArrayList<Task> getTasks() {
+        return tasks;
+    }
+
+    public TaskGraphic getTaskGraphic(Task task) {
+        return taskGraphicsHash.get(task);
+    }
+
+    public ArrayList<TaskGraphic> getTaskGraphics() {
+        ArrayList<TaskGraphic> taskGraphics = new ArrayList<>();
+        for (Task task : tasks) {
+            taskGraphics.add(getTaskGraphic(task));
+        }
+        return taskGraphics;
+    }
+
+    public TaskDatabaseHelper getTaskDatabaseHelper() {
+        return this.taskDatabaseHelper;
+    }
+
+    // SETTER FUNCTIONS (note that the key to the hash maps is the task object)
+
+    // Adds new task to task list and database
+    public long addNewTask(Task newTask) {
+        tasks.add(newTask);
+        return taskDatabaseHelper.addNewTask(newTask);
+    }
+
+    // Store all incomplete tasks from the database to the task list array (used at the beginning)
+    public void downloadIncompleteTasks() {
+        if (!addTasksLocked) {
+            tasks = taskDatabaseHelper.getTasks(true);
+            addTasksLocked = true;
+        } else
+            throw new IllegalStateException("Downloading from the database should occur only once");
+    }
+
+    // Store graphic information for an individual task
+    public void addTaskGraphic(Task task, TaskGraphic taskGraphic) {
+        taskGraphicsHash.put(task, taskGraphic);
+    }
+
+    // Update a modified task in the database
+    public void updateTask(Task task) {
+        // Since the Task object is actually just a pointer, we only need to update the database
+        taskDatabaseHelper.updateTask(task);
+    }
 }
