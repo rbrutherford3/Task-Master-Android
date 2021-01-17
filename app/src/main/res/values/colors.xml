@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="highest">#FFAA0000</color>
+    <color name="middle">#FFAAAA00</color>
+    <color name="lowest">#FF00AA00</color>
+    <color name="shade">#80000000</color>
+</resources>

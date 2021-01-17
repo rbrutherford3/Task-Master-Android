@@ -15,6 +15,7 @@ import android.widget.SeekBar;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 // Fragment for creating or modifying a task
@@ -22,46 +23,47 @@ public class FragmentAddOrModifyTask extends Fragment implements Parcelable {
 
     // PRIVATE MEMBERS
 
+    // Creator method
+    public static final Creator<FragmentAddOrModifyTask> CREATOR = new Creator<FragmentAddOrModifyTask>() {
+        @Contract("_ -> new")
+        @Override
+        public @NotNull FragmentAddOrModifyTask createFromParcel(Parcel in) {
+            return new FragmentAddOrModifyTask(in);
+        }
+
+        @Contract(value = "_ -> new", pure = true)
+        @Override
+        public FragmentAddOrModifyTask @NotNull [] newArray(int size) {
+            return new FragmentAddOrModifyTask[size];
+        }
+    };
+
     // Input objects:
     EditText editTextTask;
     int editTextTaskHintColor;
     SeekBar seekBarImportance;
     SeekBar seekBarUrgency;
     Button buttonSubmitNewTask;
-
-    // Get new instance of taskViewModel to save information (Source of task information)
-    private TaskViewModel taskViewModel;
-
-    boolean newTask;    // new or existing task?
+    boolean newTask = false;    // new or existing task?
     Task existingTask;  // task to be modified, if editing
 
     // CONSTRUCTORS AND PARCEL-RELATED FUNCTIONS
+    // Get new instance of taskViewModel to save information (Source of task information)
+    private TaskViewModel taskViewModel;
 
     // Receive existing task as a parcel
-    protected FragmentAddOrModifyTask(Parcel in) {
+    protected FragmentAddOrModifyTask(@NotNull Parcel in) {
         existingTask = in.readParcelable(Task.class.getClassLoader());
-    }
-
-    // Creator method
-    public static final Creator<FragmentAddOrModifyTask> CREATOR = new Creator<FragmentAddOrModifyTask>() {
-        @Override
-        public FragmentAddOrModifyTask createFromParcel(Parcel in) {
-            return new FragmentAddOrModifyTask(in);
-        }
-
-        @Override
-        public FragmentAddOrModifyTask[] newArray(int size) {
-            return new FragmentAddOrModifyTask[size];
-        }
-    };
-
-    // Provide an instance of this class
-    public static FragmentAddOrModifyTask newInstance() {
-        return new FragmentAddOrModifyTask();
     }
 
     // Required empty public constructor
     public FragmentAddOrModifyTask() {
+    }
+
+    // Provide an instance of this class
+    @Contract(" -> new")
+    public static @NotNull FragmentAddOrModifyTask newInstance() {
+        return new FragmentAddOrModifyTask();
     }
 
     // Differentiate between adding new task and editing existing task
@@ -79,7 +81,7 @@ public class FragmentAddOrModifyTask extends Fragment implements Parcelable {
 
     // Inflate layout
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NotNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_add_or_modify_task, container, false);
@@ -101,7 +103,7 @@ public class FragmentAddOrModifyTask extends Fragment implements Parcelable {
         buttonSubmitNewTask = requireActivity().findViewById(R.id.button_submit_new_task);
 
         // On submission...
-        buttonSubmitNewTask.setOnClickListener(l -> {
+        buttonSubmitNewTask.setOnClickListener((View l) -> {
             // Get text entered by user for the task
             String textTask = editTextTask.getText().toString();
 
@@ -116,11 +118,11 @@ public class FragmentAddOrModifyTask extends Fragment implements Parcelable {
                             seekBarUrgency.getProgress(), false);
 
                     // Add that task to the view model (which will update the database)
-                    taskViewModel.addNewTask(newTask);
+                    taskViewModel.addNewTaskItem(newTask);
                 } else {
 
                     // Update existing task with new values from inputs
-                    existingTask.setTask(editTextTask.getText().toString());
+                    existingTask.setLabel(editTextTask.getText().toString());
                     existingTask.setImportance(seekBarImportance.getProgress());
                     existingTask.setUrgency(seekBarUrgency.getProgress());
 
@@ -136,7 +138,7 @@ public class FragmentAddOrModifyTask extends Fragment implements Parcelable {
 
         // If existing task was passed, then change the inputs to reflect current values
         if (!newTask) {
-            ((EditText) requireActivity().findViewById(R.id.edit_text_task)).setText(existingTask.getTask());
+            ((EditText) requireActivity().findViewById(R.id.edit_text_task)).setText(existingTask.getLabel());
             ((SeekBar) requireActivity().findViewById(R.id.seek_bar_importance)).setProgress(existingTask.getImportance());
             ((SeekBar) requireActivity().findViewById(R.id.seek_bar_urgency)).setProgress(existingTask.getUrgency());
         }
@@ -150,7 +152,7 @@ public class FragmentAddOrModifyTask extends Fragment implements Parcelable {
     }
 
     @Override
-    public void writeToParcel(Parcel dest, int flags) {
+    public void writeToParcel(@NotNull Parcel dest, int flags) {
         dest.writeParcelable(existingTask, flags);
     }
 }

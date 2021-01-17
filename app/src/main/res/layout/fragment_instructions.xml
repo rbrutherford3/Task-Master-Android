@@ -54,20 +54,5 @@
             android:text="@string/instructions4"
             android:textAppearance="@style/TextAppearance.AppCompat.Body2" />
 
-        <TextView
-            android:id="@+id/text_view_instructions_5"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="10dp"
-            android:text="@string/instructions5"
-            android:textAppearance="@style/TextAppearance.AppCompat.Body2" />
-
-        <TextView
-            android:id="@+id/text_view_instructions_6"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="10dp"
-            android:text="@string/instructions6"
-            android:textAppearance="@style/TextAppearance.AppCompat.Body2" />
     </LinearLayout>
 </FrameLayout>

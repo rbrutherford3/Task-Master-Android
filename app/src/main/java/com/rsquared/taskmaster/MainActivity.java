@@ -32,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // OPTION TO RESET DATABASE (DEBUG ONLY)
-        resetDatabase(false);
+        //resetDatabase(true);
 
         // taskViewModel holds task information between views, activities, etc.
         TaskViewModel taskViewModel = new ViewModelProvider(this).get(TaskViewModel.class);
@@ -103,19 +103,19 @@ public class MainActivity extends AppCompatActivity {
     // PIECEMEAL PRIVATE METHODS FOR CHANGING FRAGMENTS (USED BY ABOVE METHODS)
 
     // Create transaction for the above methods
-    private FragmentTransaction prepareTransaction() {
+    private @NotNull FragmentTransaction prepareTransaction() {
         ((ViewGroup) findViewById(R.id.main_activity)).removeAllViews();
         FragmentManager fragmentManager = Objects.requireNonNull(getSupportFragmentManager());
         return fragmentManager.beginTransaction();
     }
 
     // Create fragment for adding a new task
-    private FragmentAddOrModifyTask newFragment() {
+    private @NotNull FragmentAddOrModifyTask newFragment() {
         return FragmentAddOrModifyTask.newInstance();
     }
 
     // Create fragment for editing an existing task
-    private FragmentAddOrModifyTask newFragmentWithTask(Task task) {
+    private @NotNull FragmentAddOrModifyTask newFragmentWithTask(Task task) {
         Bundle bundle = new Bundle();
         bundle.putParcelable("editTask", task);
         FragmentAddOrModifyTask fragmentAddOrModifyTask = FragmentAddOrModifyTask.newInstance();
@@ -124,7 +124,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // Finish transaction for the above methods
-    private void finalizeTransaction(FragmentTransaction fragmentTransaction,
+    private void finalizeTransaction(@NotNull FragmentTransaction fragmentTransaction,
                                      FragmentAddOrModifyTask fragmentAddOrModifyTask) {
         fragmentTransaction.add(R.id.main_activity, fragmentAddOrModifyTask);
         fragmentTransaction.commit();
@@ -140,7 +140,7 @@ public class MainActivity extends AppCompatActivity {
         StringBuilder msg = new StringBuilder();
         for (Task task : tasks) {
             count++;
-            msg.append(task.getTask()).append(", urgency = ").append(task.getUrgency()).append(", importance = ").
+            msg.append(task.getLabel()).append(", urgency = ").append(task.getUrgency()).append(", importance = ").
                     append(task.getImportance()).append(System.getProperty("line.separator"));
         }
         if (count == 0) {
@@ -159,18 +159,26 @@ public class MainActivity extends AppCompatActivity {
             Task test2 = new Task("is", 75, 25, false);
             Task test3 = new Task("a", 25, 25, false);
             Task test4 = new Task("test", 25, 75, false);
+            Task test5 = new Task("don't", 50, 50, false);
+            Task test6 = new Task("tread", 50, 50, false);
+            Task test7 = new Task("on", 50, 50, false);
+            Task test8 = new Task("me!", 50, 50, false);
             long id1 = taskDatabaseHelper.addNewTask(test1);
             long id2 = taskDatabaseHelper.addNewTask(test2);
             long id3 = taskDatabaseHelper.addNewTask(test3);
             long id4 = taskDatabaseHelper.addNewTask(test4);
+            long id5 = taskDatabaseHelper.addNewTask(test5);
+            long id6 = taskDatabaseHelper.addNewTask(test6);
+            long id7 = taskDatabaseHelper.addNewTask(test7);
+            long id8 = taskDatabaseHelper.addNewTask(test8);
             Task task1check = taskDatabaseHelper.getTask(id1);
             Task task2check = taskDatabaseHelper.getTask(id2);
             Task task3check = taskDatabaseHelper.getTask(id3);
             Task task4check = taskDatabaseHelper.getTask(id4);
-            task1check.debug();
-            task2check.debug();
-            task3check.debug();
-            task4check.debug();
+            Task task5check = taskDatabaseHelper.getTask(id5);
+            Task task6check = taskDatabaseHelper.getTask(id6);
+            Task task7check = taskDatabaseHelper.getTask(id7);
+            Task task8check = taskDatabaseHelper.getTask(id8);
         }
     }
 }

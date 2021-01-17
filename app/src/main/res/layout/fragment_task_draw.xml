@@ -4,12 +4,13 @@
     android:id="@+id/fragment_task_draw"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+
     tools:context=".FragmentTaskDraw">
 
     <androidx.constraintlayout.widget.ConstraintLayout xmlns:app="http://schemas.android.com/apk/res-auto"
         android:id="@+id/constraint_layout_main"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent">
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
         <com.rsquared.taskmaster.TaskDraw
             android:id="@+id/task_draw"
@@ -21,4 +22,17 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
+    <ImageView
+        android:id="@+id/popup_background"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/shade"
+        android:visibility="invisible"
+        android:contentDescription="@string/content_description" />
+    <com.rsquared.taskmaster.GroupPopup
+        android:id="@+id/group_popup"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_gravity="center"
+        android:visibility="invisible" />
 </FrameLayout>

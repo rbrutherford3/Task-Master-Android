@@ -33,16 +33,16 @@ public class TaskDatabaseHelper extends SQLiteOpenHelper {
     // Use singleton method to provide only one instance of a database helper at a time
     private static TaskDatabaseHelper singletonTaskDatabaseHelper;
 
+    // If you change the database schema, you must increment the database version.
+    public TaskDatabaseHelper(Context context) {
+        super(context, DATABASE_NAME, null, DATABASE_VERSION);
+    }
+
     public static synchronized TaskDatabaseHelper getInstance(Context context) {
         // Use the application context, which will ensure that you don't accidentally leak an Activity's context.
         if (singletonTaskDatabaseHelper == null)
             singletonTaskDatabaseHelper = new TaskDatabaseHelper(context.getApplicationContext());
         return singletonTaskDatabaseHelper;
-    }
-
-    // If you change the database schema, you must increment the database version.
-    public TaskDatabaseHelper(Context context) {
-        super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
     // DATABASE MANIPULATION METHODS (add/drop table, etc)
@@ -154,7 +154,7 @@ public class TaskDatabaseHelper extends SQLiteOpenHelper {
 
         // Create insert entries
         ContentValues values = new ContentValues();
-        values.put(COLUMN_NAME_TASK, newTask.getTask());
+        values.put(COLUMN_NAME_TASK, newTask.getLabel());
         values.put(COLUMN_NAME_IMPORTANCE, newTask.getImportance());
         values.put(COLUMN_NAME_URGENCY, newTask.getUrgency());
         values.put(COLUMN_NAME_COMPLETED, newTask.getCompleted());
@@ -174,7 +174,7 @@ public class TaskDatabaseHelper extends SQLiteOpenHelper {
 
         // Match fields to new information
         ContentValues values = new ContentValues();
-        values.put(COLUMN_NAME_TASK, task.getTask());
+        values.put(COLUMN_NAME_TASK, task.getLabel());
         values.put(COLUMN_NAME_IMPORTANCE, task.getImportance());
         values.put(COLUMN_NAME_URGENCY, task.getUrgency());
         values.put(COLUMN_NAME_COMPLETED, task.getCompleted());

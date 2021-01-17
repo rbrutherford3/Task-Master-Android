@@ -10,10 +10,9 @@
     <string name="submit_task">Save</string>
     <string name="instructions1">Tap task to mark done, again to undo</string>
     <string name="instructions2">Double tap task (or tap and hold) to edit</string>
-    <string name="instructions3">More important tasks are higher up</string>
-    <string name="instructions4">More urgent tasks are toward the left</string>
-    <string name="instructions5">Importance: What if it weren\'t done?</string>
-    <string name="instructions6">Urgency: What if it weren\'t done soon?</string>
+    <string name="instructions3">Importance: What if it weren\'t done?</string>
+    <string name="instructions4">Urgency: What if it weren\'t done soon?</string>
     <string name="add_task">Add Task</string>
     <string name="instructions_header">Instructions:</string>
+    <string name="content_description">Popup window for grouped tasks</string>
 </resources>
