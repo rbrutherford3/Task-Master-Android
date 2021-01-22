@@ -61,7 +61,7 @@ public class TaskDatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(@NotNull SQLiteDatabase database) {
-        createTable();
+        database.execSQL(CREATE_TABLE);
     }
 
     @Override

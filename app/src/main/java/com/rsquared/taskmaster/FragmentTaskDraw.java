@@ -90,6 +90,7 @@ public class FragmentTaskDraw extends Fragment {
                             popupBackground.setVisibility(View.INVISIBLE);
                         } else {
                             touchedTask.setCompleted(!touchedTask.getCompleted());
+                            taskViewModel.updateTask((Task) touchedTask);
                             groupPopup.invalidate();
                         }
                     }

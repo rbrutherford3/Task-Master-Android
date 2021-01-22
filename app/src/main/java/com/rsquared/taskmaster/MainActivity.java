@@ -31,11 +31,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // OPTION TO RESET DATABASE (DEBUG ONLY)
-        //resetDatabase(true);
-
         // taskViewModel holds task information between views, activities, etc.
         TaskViewModel taskViewModel = new ViewModelProvider(this).get(TaskViewModel.class);
+
+        // OPTION TO RESET DATABASE (DEBUG ONLY)
+        //resetDatabase(true);
 
         // Get all the unfinished tasks for display
         taskViewModel.downloadIncompleteTasks();
