@@ -118,7 +118,7 @@ public class FragmentAddOrModifyTask extends Fragment implements Parcelable {
                             seekBarUrgency.getProgress(), false);
 
                     // Add that task to the view model (which will update the database)
-                    taskViewModel.addNewTaskItem(newTask);
+                    taskViewModel.addTask(newTask);
                 } else {
 
                     // Update existing task with new values from inputs
@@ -128,7 +128,6 @@ public class FragmentAddOrModifyTask extends Fragment implements Parcelable {
 
                     // Commit changes to ViewModel and database
                     taskViewModel.updateTask(existingTask);
-                    //existingTask = null;
                 }
 
                 // Go back to "home" screen to view tasks

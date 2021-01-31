@@ -69,10 +69,6 @@ This class supplies forms for adding or editing tasks (name, urgency, and import
 
 Holds all graphic information for a task group or task (position, text dimensions, etc).  Was formerly a sub class of the `Task` object, but it was broken out for clarity.  Note that a `TaskGroup` object must also use `TaskGraphic` to be seen on the screen.
 
-### `TaskItem.java`
-
-A necessary interface for `Task` and `TaskGroup` since they embody many of the same properties and methods.
-
 ### `TaskDatabaseContract.java`
 
 Holds all the information for the SQLite database: table names, field names, queries for updating, adding, etc.

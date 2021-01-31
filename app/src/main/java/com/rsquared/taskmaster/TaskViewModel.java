@@ -5,9 +5,13 @@ import android.app.Application;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 
+import org.jetbrains.annotations.NotNull;
+
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 // View model class to hold all the active tasks, plus update or read from database
+// Note that task groups are not considered because they don't need to survive fragment changes
 public class TaskViewModel extends AndroidViewModel {
 
     // PRIVATE MEMBERS
@@ -15,9 +19,11 @@ public class TaskViewModel extends AndroidViewModel {
     // Database object
     private final TaskDatabaseHelper taskDatabaseHelper = TaskDatabaseHelper.getInstance(this.getApplication());
     // List of tasks
-    private ArrayList<TaskItem> taskItems = new ArrayList<>();
+    private ArrayList<Task> originalTasks;
+    private ArrayList<Task> tasks;
+    private ArrayList<TaskGroup> taskGroups = new ArrayList<>();
     // An extra measure to assure that downloading data from the database only occurs once
-    private boolean addTasksLocked = false;
+    private boolean downloadTasksLocked = false;
 
     // CONSTRUCTOR
 
@@ -25,45 +31,28 @@ public class TaskViewModel extends AndroidViewModel {
         super(application);
     }
 
-    // GETTER FUNCTIONS
-
-    // retrieve task with matching ID (not used)
-    public Task getTask(long id) {
-        for (TaskItem taskItem : taskItems) {
-            if (taskItem instanceof Task && ((Task) taskItem).getID() == id)
-                return (Task) taskItem;
-        }
-        return null;
-    }
-
-    public ArrayList<TaskItem> getTaskItems() {
-        return taskItems;
-    }
-
-    // Get task items from outside source
-    public void setTaskItems(ArrayList<TaskItem> taskItems) {
-        this.taskItems = taskItems;
-    }
-
     // SETTER FUNCTIONS
 
-    public TaskDatabaseHelper getTaskDatabaseHelper() {
-        return this.taskDatabaseHelper;
+    // Adds new task to task list and database
+
+    public void addTask(Task task) {
+        tasks.add(task);
+        taskDatabaseHelper.addTask(task);
+    }
+    public void addTasks(@NotNull ArrayList<Task> tasks) {
+        for (Task task : tasks)
+            addTask(task);
     }
 
     // Adds new task to task list and database
-    public void addNewTaskItem(TaskItem newTaskItem) {
-        taskItems.add(newTaskItem);
-        if (newTaskItem instanceof Task) taskDatabaseHelper.addNewTask((Task) newTaskItem);
+    public void addTaskGroup(@NotNull TaskGroup taskGroup) {
+        tasks.removeAll(taskGroup.getTasks());
+        taskGroups.add(taskGroup);
     }
 
-    // Store all incomplete tasks from the database to the task list array (used at the beginning)
-    public void downloadIncompleteTasks() {
-        if (!addTasksLocked) {
-            taskItems.addAll(taskDatabaseHelper.getTasks(true));
-            addTasksLocked = true;
-        } else
-            throw new IllegalStateException("Downloading from the database should occur only once");
+    public void addTaskGroups(@NotNull ArrayList<TaskGroup> taskGroups) {
+        for (TaskGroup taskGroup : taskGroups)
+            addTaskGroup(taskGroup);
     }
 
     // Update a modified task in the database
@@ -72,17 +61,33 @@ public class TaskViewModel extends AndroidViewModel {
         taskDatabaseHelper.updateTask(task);
     }
 
-    // De-attach each individual task from their groups
+    // Store all incomplete tasks from the database to the task list array (used at the beginning)
+    public void downloadIncompleteTasks() {
+        if (!downloadTasksLocked) {
+            tasks = taskDatabaseHelper.getTasks(true);
+            downloadTasksLocked = true;
+        } else
+            throw new IllegalStateException("Downloading from the database should occur only once");
+    }
+
     public void deGroupTasks() {
-        ArrayList<TaskGroup> taskGroups = new ArrayList<>();
-        ArrayList<Task> tasks = new ArrayList<>();
-        for (TaskItem taskItem : taskItems) {
-            if (taskItem instanceof TaskGroup) {
-                tasks.addAll(((TaskGroup) taskItem).getTasks());
-                taskGroups.add((TaskGroup) taskItem);
-            }
+        for (TaskGroup taskGroup : taskGroups) {
+            tasks.addAll(taskGroup.getTasks());
         }
-        taskItems.addAll(tasks);
-        taskItems.removeAll(taskGroups);
+        taskGroups = new ArrayList<>();
+    }
+
+    // GETTER FUNCTIONS
+
+    public ArrayList<Task> getTasks() {
+        return tasks;
+    }
+
+    public ArrayList<TaskGroup> getTaskGroups() {
+        return taskGroups;
+    }
+
+    public TaskDatabaseHelper getTaskDatabaseHelper() {
+        return this.taskDatabaseHelper;
     }
 }

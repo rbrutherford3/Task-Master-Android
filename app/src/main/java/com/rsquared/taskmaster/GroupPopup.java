@@ -10,18 +10,17 @@ import android.widget.FrameLayout;
 
 import androidx.core.content.ContextCompat;
 
-import org.jetbrains.annotations.NotNull;
-
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-
 // Class for popup view that generates when the user taps on a group (uses TaskDraw as model)
 public class GroupPopup extends TaskDraw {
+
+	// INITIALIZE PRIVATE MEMBERS
 
 	private final int padding = 20;   // dp
 	private final int borderColor = 0xFF000000;
 	private final int borderThickness = 2;
 	private TaskGroup taskGroup;
+	private Rect groupArea;
+	private int backgroundColor;
 
 	// Inherit constructor from parent
 	public GroupPopup(Context context, AttributeSet attrs) {
@@ -33,67 +32,49 @@ public class GroupPopup extends TaskDraw {
 		setupPaintRect();
 		setupPaintText();
 		setGroup(taskGroup);
-		setGraphics(taskGroup);
+		nudgeTasks(taskGroup, true);
+		setGraphic();
+		prepareCanvas();
 	}
 
-	// User defines group
+	// User defined group
 	public void setGroup(TaskGroup taskGroup) {
 		this.taskGroup = taskGroup;
 	}
 
-	// Set up graphic for a group in a popup
-	public TaskGraphic setGraphics(@NotNull TaskGroup taskGroup) {
-		super.setGraphics(taskGroup);    // inherit from parent and add upon (to handle tasks)
+	// Set up popup area by moving everything to the center
+	public void setGraphic() {
 
-		// initiate each dimension (throws error otherwise)
-		Float leftLowest = null;
-		Float topLowest = null;
-		Float rightHighest = null;
-		Float bottomHighest = null;
-
-		// Get the minimum size of the popup based on the touch areas of each task item
-		for (Task task : this.taskGroup.getTasks()) {
-			leftLowest = (leftLowest == null ?
-					task.getTaskGraphic().getTouchArea().left :
-					min(leftLowest, task.getTaskGraphic().getTouchArea().left));
-			topLowest = (topLowest == null ?
-					task.getTaskGraphic().getTouchArea().top :
-					min(topLowest, task.getTaskGraphic().getTouchArea().top));
-			rightHighest = (rightHighest == null ?
-					task.getTaskGraphic().getTouchArea().right :
-					max(rightHighest, task.getTaskGraphic().getTouchArea().right));
-			bottomHighest = (bottomHighest == null ?
-					task.getTaskGraphic().getTouchArea().bottom :
-					max(bottomHighest, task.getTaskGraphic().getTouchArea().bottom));
+		// Get the minimum size of the popup by joining each tasks' touch area
+		groupArea = new Rect(taskGroup.getTasks().get(0).getTaskGraphic().getTouchArea());
+		for (Task task : this.taskGroup.getTasks().subList(1, taskGroup.getTasks().size())) {
+			groupArea.union(new Rect(task.getTaskGraphic().getTouchArea()));
 		}
 
-		// Determine where to move each task based on the dimensions gathered above
-		float deltaX = -leftLowest + padding;
-		float deltaY = -topLowest + padding;
+		// Determine where to move each task based on the area gathered above
+		float deltaX = -groupArea.left + padding;
+		float deltaY = -groupArea.top + padding;
 		for (Task task : taskGroup.getTasks())
 			task.getTaskGraphic().move((int) deltaX, (int) deltaY);
+	}
+
+	// Set up popup background color, border thickness, dimensions, etc
+	public void prepareCanvas() {
 
 		// Determine background color of popup based on group location on taskDraw
-		int backgroundColor = getColor(taskGroup.getImportance(), taskGroup.getUrgency());
-		prepareCanvas(backgroundColor, (int) (rightHighest - leftLowest + 2 * padding),
-				(int) (bottomHighest - topLowest + 2 * padding));
-
-		return taskGroup.getTaskGraphic();
-	}
-
-	public void prepareCanvas(int backgroundColor, int width, int height) {
+		backgroundColor = getColor(taskGroup.getImportance(), taskGroup.getUrgency());
 		FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) this.getLayoutParams();
-		params.height = height;
-		params.width = width;
-		this.setLayoutParams(params);
-		GradientDrawable gd = new GradientDrawable();
-		gd.setShape(GradientDrawable.RECTANGLE);
-		gd.setStroke(borderThickness, borderColor);
-		gd.setColor(backgroundColor);
-		this.setBackground(gd);
+		params.height = (int) (groupArea.bottom - groupArea.top + 2 * padding);
+		params.width = (int) (groupArea.right - groupArea.left + 2 * padding);
+		setLayoutParams(params);
+		GradientDrawable gradientDrawable = new GradientDrawable();
+		gradientDrawable.setShape(GradientDrawable.RECTANGLE);
+		gradientDrawable.setStroke(borderThickness, borderColor);
+		gradientDrawable.setColor(backgroundColor);
+		setBackground(gradientDrawable);
 	}
 
-	// Use parent function drawTask to draw tasks
+	// Draw all the group's tasks
 	@Override
 	protected void onDraw(Canvas canvas) {
 		if (taskGroup != null)
@@ -104,14 +85,11 @@ public class GroupPopup extends TaskDraw {
 	// Return a task after touching an area by looping through each task and checking
 	public Task getTouchedTask(float x, float y) {
 
-		// Loop through all texts
+		// Loop through all tasks
 		for (Task task : taskGroup.getTasks()) {
 
-			// Grab the pre-determined touch area
-			Rect touchArea = task.getTaskGraphic().getTouchArea();
-
 			// If the tap coordinates were inside the touch area for a task, then save the task
-			if (touchArea.contains((int) x, (int) y))
+			if (task.getTaskGraphic().getTouchArea().contains((int) x, (int) y))
 				return task;
 		}
 		return null; // nothing hit if you've made it this far

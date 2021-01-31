@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 // Task class: holds all the information for an individual task
-public class Task implements Parcelable, TaskItem {
+public class Task implements Parcelable {
     // This function is for using with the view model object, and not sure how to explain it
     public static final Creator<Task> CREATOR = new Creator<Task>() {
         @Contract("_ -> new")
@@ -22,6 +22,7 @@ public class Task implements Parcelable, TaskItem {
             return new Task[size];
         }
     };
+
     private long _id;
     private String label;
     private int importance; // (1-100)
@@ -71,31 +72,14 @@ public class Task implements Parcelable, TaskItem {
         completed = in.readByte() != 0;
     }
 
-    @Override
-    public TaskGroup addTaskItem(TaskItem taskItem) {
-        return new TaskGroup(this, taskItem);
-    }
+    // SETTER FUNCTIONS
 
-    // GETTER FUNCTIONS
-
-    public long getID() {
-        return _id;
-    }
-
-    public void setID(long id) {
-        this._id = id;
-    }  // Should never be used
-
-    public String getLabel() {
-        return label;
+    private void setID(long id) {
+       this._id = id;
     }
 
     public void setLabel(String label) {
         this.label = label;
-    }
-
-    public int getImportance() {
-        return importance;
     }
 
     public void setImportance(int importance) {
@@ -105,12 +89,6 @@ public class Task implements Parcelable, TaskItem {
             throw new IllegalArgumentException("Importance must be an integer between 0 and 100");
     }
 
-    // VALIDATION & SANITATION FUNCTIONS
-
-    public int getUrgency() {
-        return urgency;
-    }
-
     public void setUrgency(int urgency) {
         if (validateUrgency(urgency))
             this.urgency = urgency;
@@ -118,27 +96,45 @@ public class Task implements Parcelable, TaskItem {
             throw new IllegalArgumentException("Urgency must be an integer between 0 and 100");
     }
 
-    public boolean getCompleted() {
-        return completed;
+    public void setCompleted(boolean completed) {
+        this.completed = completed;
     }
 
     public void setCompleted(int completed) {
         this.completed = sanitizeCompleted(completed);
     }
 
-    // SETTER FUNCTIONS
+    public void setTaskGraphic(TaskGraphic taskGraphic) {
+        this.taskGraphic = taskGraphic;
+    }
 
-    public void setCompleted(boolean completed) {
-        this.completed = completed;
+    // GETTER FUNCTIONS
+
+    public long getID() {
+        return _id;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public int getImportance() {
+        return importance;
+    }
+
+    public int getUrgency() {
+        return urgency;
+    }
+
+    public boolean getCompleted() {
+        return completed;
     }
 
     public TaskGraphic getTaskGraphic() {
         return taskGraphic;
     }
 
-    public void setTaskGraphic(TaskGraphic taskGraphic) {
-        this.taskGraphic = taskGraphic;
-    }
+    // VALIDATION & SANITATION FUNCTIONS
 
     // "Rating" is either "importance" or "urgency"
     public boolean validateRating(int rating) {

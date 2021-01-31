@@ -14,9 +14,6 @@ public class TaskGraphic {
 
 	// CONSTRUCTORS
 
-	public TaskGraphic() {
-	}
-
 	public TaskGraphic(Float baseline, Float checkBoxStart, Float textStart, Rect touchArea) {
 		this.baseline = baseline;
 		this.checkBoxStart = checkBoxStart;
@@ -30,35 +27,34 @@ public class TaskGraphic {
 		return baseline;
 	}
 
-	public void setBaseline(Float y) {
-		baseline = y;
-	}
-
 	public Float getCheckBoxStart() {
 		return checkBoxStart;
 	}
 
-	public void setCheckBoxStart(Float x) {
-		checkBoxStart = x;
-	}
-
-
-	// SETTER METHODS
-
 	public Float getTextStart() {
 		return textStart;
-	}
-
-	public void setTextStart(Float x) {
-		textStart = x;
 	}
 
 	public Rect getTouchArea() {
 		return touchArea;
 	}
 
+	// SETTER METHODS
+
+	public void setBaseline(Float y) {
+		this.baseline = y;
+	}
+
+	public void setCheckBoxStart(Float x) {
+		this.checkBoxStart = x;
+	}
+
+	public void setTextStart(Float x) {
+		this.textStart = x;
+	}
+
 	public void setTouchArea(Rect area) {
-		touchArea = area;
+		this.touchArea = area;
 	}
 
 	public void move(int dx, int dy) {
@@ -67,6 +63,8 @@ public class TaskGraphic {
 		setTextStart(getTextStart() + dx);
 		getTouchArea().offset(dx, dy);
 	}
+
+	// DEBUGGING FUNCTIONS
 
 	public void debug() {
 		System.out.println("CONTENTS OF TaskGraphic INSTANCE:");

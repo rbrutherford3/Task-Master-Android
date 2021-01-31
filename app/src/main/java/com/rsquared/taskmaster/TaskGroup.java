@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 // This class for task groups, and is much like the task class
-public class TaskGroup implements TaskItem {
+public class TaskGroup {
 
 	// PRIVATE MEMBERS
 
@@ -15,43 +15,33 @@ public class TaskGroup implements TaskItem {
 	private String label;
 	private int averageImportance;
 	private int averageUrgency;
-	private boolean forceCombining = false;
 	private TaskGraphic taskGraphic;
 
 	// CONSTRUCTORS
 
 	// Initialize with an undetermined mixture of tasks and task groups
-	public TaskGroup(@NotNull TaskItem... taskItemList) {
-		for (TaskItem taskItem : taskItemList) {
-			addTaskItem(taskItem);
+	public TaskGroup(@NotNull Task... tasks) {
+		for (Task task : tasks) {
+			addTask(task);
 		}
 	}
 
-	// Alternative constructor for arraylist instead of a list
-	public TaskGroup(@NotNull ArrayList<TaskItem> taskItemList) {
-		for (TaskItem taskOrGroup : taskItemList)
-			addTaskItem(taskOrGroup);
+	// Alternative constructor for array list instead of a list
+	public TaskGroup(@NotNull ArrayList<Task> tasks) {
+		for (Task task : tasks)
+			addTask(task);
 	}
 
 	// SETTER METHODS
 
 	// Create a list of groups
-	public TaskGroup addTaskItem(@NotNull TaskItem taskItem) {
-		if (taskItem instanceof Task) {
-			addTask((Task) taskItem);
-		} else {
-			addTaskGroup((TaskGroup) taskItem);
-		}
-		return getGroup();
-	}
-
-	private void addTask(@NotNull Task newTask) {
-		tasks.add(newTask);
+	public void addTask(@NotNull Task task) {
+		tasks.add(task);
 		combine();
 	}
 
-	private void addTaskGroup(@NotNull TaskGroup newTaskGroup) {
-		for (Task task : newTaskGroup.tasks) {
+	public void addTaskGroup(@NotNull TaskGroup taskGroup) {
+		for (Task task : taskGroup.tasks) {
 			addTask(task);
 		}
 	}
@@ -74,22 +64,18 @@ public class TaskGroup implements TaskItem {
 		label = tasks.size() + " tasks";
 	}
 
-	public void setForceCombining(boolean forceCombining) {
-		this.forceCombining = forceCombining;
-	}
-
-	public TaskGroup getGroup() {
-		return this;
-	}  // In case someone needs the group itself
-
-	public String getLabel() {
-		return label;
+	public void setTaskGraphic(TaskGraphic taskGraphic) {
+		this.taskGraphic = taskGraphic;
 	}
 
 	// GETTER METHODS
 
-	public void setLabel(String label) {
-		this.label = label;
+	public ArrayList<Task> getTasks() {
+		return tasks;
+	}
+
+	public String getLabel() {
+		return label;
 	}
 
 	public int getImportance() {
@@ -100,19 +86,15 @@ public class TaskGroup implements TaskItem {
 		return averageUrgency;
 	}
 
-	public boolean getNudging() {
-		return (tasks.size() <= maxNudges) && !forceCombining;
-	}
-
 	public TaskGraphic getTaskGraphic() {
 		return taskGraphic;
 	}
 
-	public void setTaskGraphic(TaskGraphic taskGraphic) {
-		this.taskGraphic = taskGraphic;
-	}
-
-	public ArrayList<Task> getTasks() {
-		return tasks;
+	public boolean taskInGroup(Task task) {
+		for (Task checkTask : tasks) {
+			if (task == checkTask)
+				return true;
+		}
+		return false;
 	}
 }

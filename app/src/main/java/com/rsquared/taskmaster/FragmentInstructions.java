@@ -8,6 +8,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+
 // Simple fragment to display text instructions
 public class FragmentInstructions extends Fragment {
 
@@ -17,7 +20,8 @@ public class FragmentInstructions extends Fragment {
     public FragmentInstructions() {}
 
     // Provide an instance of this class
-    public static FragmentInstructions newInstance() {
+    @Contract(" -> new")
+    public static @NotNull FragmentInstructions newInstance() {
         return new FragmentInstructions();
     }
 
@@ -25,7 +29,7 @@ public class FragmentInstructions extends Fragment {
 
     // Only code that's necessary (fragment simply displays static text)
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NotNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_instructions, container, false);
     }

@@ -32,6 +32,7 @@ public class TaskDraw extends View {
     protected final float strokeCheckmark = 10;     // thickness of check mark
     protected final float arrowLength = 50;
     protected final float arrowPointLength = 20;
+    protected final float maxNudgeRatio = 2;        // Only nudge up to 2x the height of a task
     protected final String labelVertical = "IMPORTANCE";
     protected final String labelHorizontal = "URGENCY";
     // Paint objects used for drawing on canvas
@@ -80,7 +81,6 @@ public class TaskDraw extends View {
         setupPaintRect();
         setupPaintText();
         setTaskViewModel(taskViewModel);
-        taskViewModel.deGroupTasks();
         setDimensions(width, height);
         setupCanvasValues();    // need the dimensions to be set before this setup
         overlappingTasks();
@@ -127,13 +127,13 @@ public class TaskDraw extends View {
         paintAxisLabels.setUnderlineText(true);
     }
 
-    // GETTER FUNCTIONS
-
-    // Get the overall dimensions of the graphic
+    // Set the overall dimensions of the graphic
     public void setDimensions(float width, float height) {
         widthCanvas = width;
         heightCanvas = height;
     }
+
+    // GETTER FUNCTIONS
 
     // Function to determine the absolute distance position on the urgency vs importance graphic
     protected float[] getPixelCoordinates(int importance, int urgency) {
@@ -149,7 +149,7 @@ public class TaskDraw extends View {
     // Derive values for axis labels with arrows (arrows drawn manually, many lines)
     private void setupCanvasValues() {
 
-        // Gather measurements for vertical label (importance
+        // Gather measurements for vertical label (importance)
         // (Note that the text is meant to read from bottom to top and the canvas is rotated
         //  temporarily to make that happen)
         Rect rectVertical = new Rect();
@@ -188,7 +188,7 @@ public class TaskDraw extends View {
                 (float) (labelVerticalDeltaX - spacing - arrowLength +
                         arrowPointLength / Math.sqrt(2))};
 
-        // Create measurements for vertical arrow
+        // Create measurements for horizontal arrow
         arrowHorizontal = new float[3][2][2]; // 3 lines, 2 points per line, 2 dimensions per point
         arrowHorizontal[0][0] = new float[]{
                 labelHorizontalDeltaX - spacing,
@@ -214,22 +214,36 @@ public class TaskDraw extends View {
                         arrowPointLength / Math.sqrt(2))};
     }
 
+    public void setTaskGraphic(@NotNull Task task) {
+        String label = task.getLabel();
+        int importance = task.getImportance();
+        int urgency = task.getUrgency();
+        task.setTaskGraphic(setGraphic(label, importance, urgency));
+    }
+
+    public void setTaskGroupGraphic(@NotNull TaskGroup taskGroup) {
+        String label = taskGroup.getLabel();
+        int importance = taskGroup.getImportance();
+        int urgency = taskGroup.getUrgency();
+        taskGroup.setTaskGraphic(setGraphic(label, importance, urgency));
+    }
+
     // Function to get all the necessary dimensions for the task label, check box, and check mark.
     // These metrics are stored in hash maps in taskViewModel to be pulled during an 'ondraw()' call
-    public TaskGraphic setGraphics(@NotNull TaskItem taskItem) {
+    @Contract("_, _, _ -> new")
+    protected @NotNull TaskGraphic setGraphic(String label, int importance, int urgency) {
 
         // Get the position on the canvas for the given task
-        float[] coordinates = getPixelCoordinates(taskItem.getImportance(), taskItem.getUrgency());
+        float[] coordinates = getPixelCoordinates(importance, urgency);
         float xOrigin = coordinates[0]; // The horizontal position of the left side of the checkbox
         float yOrigin = coordinates[1]; // The baseline for text and checkbox
-        // (lower edge of checkbox and baseline for text)
 
         // Create the dimensions for the task text on the canvas
         Rect rectText = new Rect(); // Outlines the text
 
         // Get text dimensions using two different approaches
-        paintText.getTextBounds(taskItem.getLabel(), 0,
-                taskItem.getLabel().length(), rectText);
+        paintText.getTextBounds(label, 0,
+                label.length(), rectText);
         float textWidth = rectText.width();
 
         float width = checkBoxSide + spacing + textWidth;
@@ -276,7 +290,7 @@ public class TaskDraw extends View {
 
     // This function moves ("nudges") individual tasks that overlap so they are next to each other
     // but not overlapping.
-    protected void nudgeTasks(@NotNull TaskGroup taskGroup) {
+    protected boolean nudgeTasks(@NotNull TaskGroup taskGroup, boolean forceNudge) {
 
         // Get the position on the canvas for the given task
         float[] coordinates = getPixelCoordinates(taskGroup.getImportance(), taskGroup.getUrgency());
@@ -302,8 +316,28 @@ public class TaskDraw extends View {
             topOfTasks = bottomOfTasks - totalTaskHeight;
         }
 
-        // Nudge each task to an unoccupied location and get total area of all grouped tasks
-        ArrayList<Rect> touchAreas = new ArrayList<>();
+        if (!forceNudge) {
+            // Test dimensions to see if a
+            int counter = 0;
+            for (Task task : taskGroup.getTasks()) {
+                float yBaseline = task.getTaskGraphic().getBaseline();
+                float yBaselineDest = topOfTasks - padding - fontTop + counter * paddedTaskHeight;
+                float nudgeY = yBaselineDest - yBaseline;
+                if (Math.abs(nudgeY) > maxNudgeRatio*paddedTaskHeight)   // Only move tasks so far
+                    return false;
+                Rect testRect = new Rect(task.getTaskGraphic().getTouchArea());
+                testRect.offset(0, (int) nudgeY);
+                for (Task checkTask : taskViewModel.getTasks())
+                    if ((!taskGroup.taskInGroup(checkTask)) && testRect.intersect(checkTask.getTaskGraphic().getTouchArea()))
+                        return false;
+                for (TaskGroup checkTaskGroup : taskViewModel.getTaskGroups())
+                    if ((taskGroup != checkTaskGroup) && testRect.intersect(checkTaskGroup.getTaskGraphic().getTouchArea()))
+                        return false;
+                counter++;
+            }
+        }
+
+        // Nudge each task to an unoccupied location
         int counter = 0;
         for (Task task : taskGroup.getTasks()) {
             float yBaseline = task.getTaskGraphic().getBaseline();
@@ -311,34 +345,8 @@ public class TaskDraw extends View {
             float nudgeY = yBaselineDest - yBaseline;
             task.getTaskGraphic().move(0, (int) nudgeY);
             counter++;
-            touchAreas.add(new Rect(task.getTaskGraphic().getTouchArea()));
         }
-        Rect touchArea = unionRects(touchAreas);
-
-        // Return graphics piece for combined tasks (no individual graphic information)
-        new TaskGraphic(yOrigin, (float) touchArea.left,
-                touchArea.left + checkBoxSide + spacing, touchArea);
-    }
-
-    // Given multiple touch areas, what is the smallest rectangle that encompasses all touch areas?
-    protected Rect unionRects(@NotNull ArrayList<Rect> rects) {
-
-        // Get the maximum of each dimension (or minimum, depending) as rectangle bounds
-        Float left = null;
-        Float top = null;
-        Float right = null;
-        Float bottom = null;
-        for (Rect rect : rects) {
-            left = (left == null ? rect.left : min(left, rect.left));
-            top = (top == null ? rect.top : min(top, rect.top));
-            right = (right == null ? rect.right : max(right, rect.right));
-            bottom = (bottom == null ? rect.bottom : max(bottom, rect.bottom));
-        }
-        assert left != null;    // Not sure why this was necessary, but it was kicked out as error
-
-        // Return the finished rectangle object
-        return new Rect((int) left.floatValue(), (int) top.floatValue(),
-                (int) right.floatValue(), (int) bottom.floatValue());
+        return true;
     }
 
     // Collects pairs of tasks whose touch areas overlap and turns them into a group of items
@@ -347,54 +355,45 @@ public class TaskDraw extends View {
 
         int start;
         boolean newPairingFound;
-        ArrayList<TaskItem> taskItems = taskViewModel.getTaskItems();
+        ArrayList<Task> tasks = taskViewModel.getTasks();
+        ArrayList<TaskGroup> taskGroups = taskViewModel.getTaskGroups();
+
+        // Make sure all the graphic information is up-to-date (including tasks in groups)
+        for (Task task : tasks) {
+            setTaskGraphic(task);
+        }
+
+        for (TaskGroup taskGroup : taskGroups) {
+            setTaskGroupGraphic(taskGroup);
+        }
 
         // Loop through possible pairs until two that overlap are found,
         // then queue the group to be created and the tasks to be moved to a group list
         do {
-            ArrayList<TaskGroup> taskGroupsToAdd = new ArrayList<>();
-            ArrayList<TaskItem> taskItemsToRemove = new ArrayList<>();
+            TaskGroup taskGroupToAdd = new TaskGroup();
+            ArrayList<Task> tasksToRemove = new ArrayList<>();
             start = 1;
             newPairingFound = false;
 
-            // Make sure all the graphic information is up-to-date (including tasks in groups)
-            for (TaskItem taskItem : taskItems) {
-                taskItem.setTaskGraphic(setGraphics(taskItem));
-                if (taskItem instanceof TaskGroup)
-                    for (Task task : ((TaskGroup) taskItem).getTasks())
-                        task.setTaskGraphic(setGraphics(task));
-            }
-
-            // Grouped items are "nudged" (moved up or down on vertical axis to prevent overlap)
-            for (TaskItem taskItem : taskItems) {
-                if (taskItem instanceof TaskGroup)
-                    nudgeTasks((TaskGroup) taskItem);
-            }
-
-            // Loop through every possible group and/or task pair
-            for (TaskItem taskItem : taskItems) {
+            // Loop through every possible combination of tasks
+            for (Task task : tasks) {
                 // (Note that the lower bound of this loop increases with the first loop.
                 //   This is to prevent redundancy, ex: #1 & #2 vs #2 & #1.  Only first will occur)
-                for (TaskItem otherTaskItem : taskItems.subList(start, taskItems.size())) {
+                for (Task otherTask : tasks.subList(start, tasks.size())) {
 
                     // See if item touch areas overlap and group them together (groups and/or tasks)
-                    Rect touchArea = taskItem.getTaskGraphic().getTouchArea();
-                    Rect otherTouchArea = otherTaskItem.getTaskGraphic().getTouchArea();
+                    Rect touchArea = task.getTaskGraphic().getTouchArea();
+                    Rect otherTouchArea = otherTask.getTaskGraphic().getTouchArea();
                     if (touchArea.intersect(otherTouchArea)) {
                         newPairingFound = true; // Break while loop to start over with new info
 
                         // Combine into groups:
                         // (item + item, item + group, group + item, or group + group)
-                        if (taskItem instanceof TaskGroup && otherTaskItem instanceof TaskGroup)
-                            if (((TaskGroup) taskItem).getTasks().size() >=
-                                    ((TaskGroup) otherTaskItem).getTasks().size())
-                                ((TaskGroup) taskItem).setForceCombining(true);
-                            else ((TaskGroup) otherTaskItem).setForceCombining(true);
-
-                        // Mark groups to be added and solo tasks to be moved to/from master list
-                        taskGroupsToAdd.add(new TaskGroup(taskItem, otherTaskItem));
-                        taskItemsToRemove.add(taskItem);
-                        taskItemsToRemove.add(otherTaskItem);
+                        taskGroupToAdd.addTask(task);
+                        taskGroupToAdd.addTask(otherTask);
+                        setTaskGroupGraphic(taskGroupToAdd);
+                        tasksToRemove.add(task);
+                        tasksToRemove.add(otherTask);
                     }
                     // Stop looking for pairs and process this pair
                     // NOTE: the reason we break the double for-loop instead of marking all
@@ -403,17 +402,46 @@ public class TaskDraw extends View {
                     if (newPairingFound) break;
                 }
                 if (newPairingFound) break;
-                if (start < taskItems.size())   // iterate start of second for loop
+                if (start < tasks.size())   // iterate start of second for loop
                     start++;
                 else
                     break;  // no more pairs to consider
             }
 
+            // Todo: this area below needs be organized better (check first, then add/remove, not vice versa)
+
             // Add new groups to the master list for groups and remove grouped tasks from master
             // list for tasks (because they are now a part of a group, eliminates redundancy)
-            taskItems.addAll(taskGroupsToAdd);
-            taskItems.removeAll(taskItemsToRemove);
+            if (newPairingFound) {
+                taskGroups.add(taskGroupToAdd);
+                tasks.removeAll(tasksToRemove);
+
+                // See if the newly formed group overlaps any other tasks
+                for (Task task : tasks) {
+                    if (taskGroupToAdd.getTaskGraphic().getTouchArea().intersect(task.getTaskGraphic().getTouchArea())) {
+                        taskGroupToAdd.addTask(task);
+                        setTaskGroupGraphic(taskGroupToAdd);
+                        tasksToRemove.add(task);
+                    }
+                }
+
+                tasks.removeAll(tasksToRemove);
+            }
+
         } while (newPairingFound);  // Keep going until no more overlaps are detected
+
+        // If nudging the tasks worked, then no need for a group
+        ArrayList<TaskGroup> taskGroupsToRemove = new ArrayList<>();
+        ArrayList<Task> tasksToAdd = new ArrayList<>();
+        for (TaskGroup taskGroup : taskGroups) {
+            if (nudgeTasks(taskGroup, false)) {
+                taskGroupsToRemove.add(taskGroup);
+                tasksToAdd.addAll(taskGroup.getTasks());
+            }
+        }
+
+        taskGroups.removeAll(taskGroupsToRemove);
+        tasks.addAll(tasksToAdd);
         invalidate();   // force a re-draw
     }
 
@@ -427,16 +455,11 @@ public class TaskDraw extends View {
         // Make sure the taskViewModel exists (not too early in program)
         if (taskViewModel != null) {
             // For each and every task...
-            for (TaskItem taskItem : taskViewModel.getTaskItems()) {
-                if (taskItem instanceof TaskGroup) {
-                    if (((TaskGroup) taskItem).getNudging()) {
-                        for (TaskItem groupTaskItem : ((TaskGroup) taskItem).getTasks()) {
-                            drawTask(canvas, groupTaskItem);
-                        }
-                    } else
-                        drawTask(canvas, taskItem);
-                } else
-                    drawTask(canvas, taskItem);
+            for (TaskGroup taskGroup : taskViewModel.getTaskGroups()) {
+                drawTaskGroup(canvas, taskGroup);
+            }
+            for (Task task : taskViewModel.getTasks()) {
+                drawTask(canvas, task);
             }
             setupCanvas(canvas);    // Draw axes elements
         }
@@ -483,45 +506,27 @@ public class TaskDraw extends View {
                 paintRect);
     }
 
-    // Draw the elements onto the canvas (because this function has the potential to be
+    // Todo: possibly recombine parts of the drawTask and drawTaskGroup functions
+
+    // Draw the task onto the canvas (because this function has the potential to be
     // called very frequently, no calculations or large allocations are performed here)
-    protected void drawTask(Canvas canvas, @NotNull TaskItem taskItem) {
+    protected void drawTask(Canvas canvas, @NotNull Task task) {
 
-        TaskGraphic graphic = taskItem.getTaskGraphic();
-
-        String label = taskItem.getLabel();
+        TaskGraphic graphic = task.getTaskGraphic();
+        String label = task.getLabel();
 
         // Pull the pre-determined position information for the task
         float yBaseline = graphic.getBaseline();
         float xCheckbox = graphic.getCheckBoxStart();
         float xText = graphic.getTextStart();
 
-        // Draw checkbox for individual tasks
-        if (taskItem instanceof Task) {
-            // Draw the checkbox in the pre-determined position
-            canvas.drawRect(
-                    xCheckbox,
-                    yBaseline - checkBoxSide,
-                    xCheckbox + checkBoxSide,
-                    yBaseline,
-                    paintRect);
-        }
-
-        // Display cross (plus sign) instead of checkbox if it's a task group
-        else {
-            canvas.drawLine(
-                    xCheckbox + (checkBoxSide / 2),
-                    yBaseline,
-                    xCheckbox + (checkBoxSide / 2),
-                    yBaseline - checkBoxSide,
-                    paintRect);
-            canvas.drawLine(
-                    xCheckbox,
-                    yBaseline - (checkBoxSide / 2),
-                    xCheckbox + checkBoxSide,
-                    yBaseline - (checkBoxSide / 2),
-                    paintRect);
-        }
+        // Draw checkbox
+        canvas.drawRect(
+            xCheckbox,
+            yBaseline - checkBoxSide,
+            xCheckbox + checkBoxSide,
+            yBaseline,
+            paintRect);
 
         // Display the label in the pre-determined position
         canvas.drawText(
@@ -531,7 +536,7 @@ public class TaskDraw extends View {
                 paintText);
 
         // If task is completed, add a check mark
-        if (taskItem instanceof Task && ((Task) taskItem).getCompleted()) {
+        if (task.getCompleted()) {
             canvas.drawLine(xCheckbox + checkBoxSide,
                     (float) (yBaseline - (1.5 * checkBoxSide)),
                     (float) (xCheckbox + (0.5 * checkBoxSide)),
@@ -545,36 +550,56 @@ public class TaskDraw extends View {
         }
     }
 
+    protected void drawTaskGroup(Canvas canvas, TaskGroup taskGroup) {
+
+        TaskGraphic graphic = taskGroup.getTaskGraphic();
+        String label = taskGroup.getLabel();
+
+        // Pull the pre-determined position information for the task
+        float yBaseline = graphic.getBaseline();
+        float xCheckbox = graphic.getCheckBoxStart();
+        float xText = graphic.getTextStart();
+
+        //Display cross (plus sign) instead of checkbox for task group
+        canvas.drawLine(
+                xCheckbox + (checkBoxSide / 2),
+                yBaseline,
+                xCheckbox + (checkBoxSide / 2),
+                yBaseline - checkBoxSide,
+                paintRect);
+        canvas.drawLine(
+                xCheckbox,
+                yBaseline - (checkBoxSide / 2),
+                xCheckbox + checkBoxSide,
+                yBaseline - (checkBoxSide / 2),
+                paintRect);
+
+        // Display the label in the pre-determined position
+        canvas.drawText(
+                label,
+                xText,
+                yBaseline,
+                paintText);
+    }
+
     // TOUCH RESPONSE FUNCTION (WHICH, IF ANY, TASK(S) WERE TOUCHED?)
 
     // This function returns a list of tasks that were touched by the user on the canvas
-    public TaskItem getTouchedTaskItems(float x, float y) {
+    public Task getTouchedTask(float x, float y) {
 
         // Loop through all tasks (groups, too) and see if touch coordinates are inside a touch area
-        for (TaskItem taskItem : taskViewModel.getTaskItems()) {
-
-            Rect touchArea;
-            if (taskItem instanceof TaskGroup) {
-                if (((TaskGroup) taskItem).getNudging()) {
-                    for (Task task : ((TaskGroup) taskItem).getTasks()) {
-                        touchArea = task.getTaskGraphic().getTouchArea();
-                        if (touchArea.contains((int) x, (int) y))
-                            return task;
-                    }
-                } else {
-                    touchArea = taskItem.getTaskGraphic().getTouchArea();
-                    if (touchArea.contains((int) x, (int) y))
-                        return taskItem;
-                }
-            }
-
-            // Grab the pre-determined touch area
-            touchArea = taskItem.getTaskGraphic().getTouchArea();
-
-            // If the tap coordinates were inside the touch area for a task, then return the task
-            if (touchArea.contains((int) x, (int) y))
-                return taskItem;
+        for (Task task : taskViewModel.getTasks()) {
+            if (task.getTaskGraphic().getTouchArea().contains((int) x, (int) y))
+                return task;
         }
-        return null; // nothing hit if you've made it this far
+        return null;    // return null if no tasks were found
+    }
+
+    public TaskGroup getTouchedTaskGroup(float x, float y) {
+        for (TaskGroup taskGroup : taskViewModel.getTaskGroups()) {
+            if (taskGroup.getTaskGraphic().getTouchArea().contains((int) x, (int) y))
+                return taskGroup;
+        }
+        return null;
     }
 }

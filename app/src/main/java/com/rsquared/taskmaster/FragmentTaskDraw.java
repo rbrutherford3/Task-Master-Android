@@ -65,12 +65,83 @@ public class FragmentTaskDraw extends Fragment {
             groupPopup = requireActivity().findViewById(R.id.group_popup);
             popupBackground = requireActivity().findViewById(R.id.popup_background);
             taskViewModel = new ViewModelProvider(requireActivity()).get(TaskViewModel.class);
+            taskViewModel.deGroupTasks();
             taskDraw.initialize(taskViewModel, taskDraw.getWidth(), taskDraw.getHeight());
 
             final Context context = getContext();
 
+            // TAP LISTENER FOR THE TASK DRAW CANVAS AND THE TASKS THEREIN
+
+            // Create responses to tap gestures on the task layout (not the group popup)
+            final SimpleOnGestureListener taskDrawListener = new SimpleOnGestureListener() {
+
+                // Apparently this override is necessary for the rest to be successful
+                @Override
+                public boolean onDown(MotionEvent motionEvent) {
+                    return true;
+                }
+
+                @Override
+                public boolean onSingleTapConfirmed(MotionEvent motionEvent) {
+
+                    // If in popup mode, hide the popup
+                    if (groupPopup.getVisibility() == View.VISIBLE) {
+                        groupPopup.setVisibility(View.INVISIBLE);
+                        popupBackground.setVisibility(View.INVISIBLE);
+                        return true;
+                    }
+
+                    // Get touched items
+                    float x = motionEvent.getX();
+                    float y = motionEvent.getY();
+                    TaskGroup touchedTaskGroup = taskDraw.getTouchedTaskGroup(x, y);
+                    Task touchedTask = taskDraw.getTouchedTask(x, y);
+
+                    // If tapping a task, then check/uncheck the test
+                    if (touchedTask != null) {
+                        touchedTask.setCompleted(!touchedTask.getCompleted());
+                        taskViewModel.updateTask(touchedTask);
+                    }
+
+                    // If tapping a group, then show the group popup
+                    else if (touchedTaskGroup != null) {
+                        groupPopup.initialize(touchedTaskGroup);
+                        popupBackground.setVisibility(View.VISIBLE);
+                        groupPopup.setVisibility(View.VISIBLE);
+                        groupPopup.invalidate();
+                    }
+
+                    taskDraw.invalidate();  // update image
+                    return true;    // necessary to prevent further action resulting from tap
+                }
+
+                // Edit a task by double tapping it
+                @Override
+                public boolean onDoubleTap(MotionEvent motionEvent) {
+                    return editTask(motionEvent);
+                }
+
+                // Edit a task by pressing and holding the task, as well
+                @Override
+                public void onLongPress(MotionEvent motionEvent) {
+                    editTask(motionEvent);
+                }
+
+                // If editing an existing task, then pull up the edit task fragment
+                private boolean editTask(@NotNull MotionEvent motionEvent) {
+                    Task touchedTask = taskDraw.getTouchedTask(motionEvent.getX(), motionEvent.getY());
+
+                    if (touchedTask != null) {
+                        ((MainActivity) requireActivity()).editTask(touchedTask);
+                    }
+                    return true;
+                }
+            };
+
+            // TAP LISTENER FOR THE GROUP POPUP CANVAS AND THE TASKS THEREIN
+
             // Create responses to tap gestures on the screen
-            final SimpleOnGestureListener listener = new SimpleOnGestureListener() {
+            final SimpleOnGestureListener groupPopupListener = new SimpleOnGestureListener() {
 
                 // Apparently this override is necessary for the rest to be successful
                 @Override
@@ -80,94 +151,52 @@ public class FragmentTaskDraw extends Fragment {
 
                 // Interpret single tap anywhere on the screen
                 @Override
-                public boolean onSingleTapConfirmed(MotionEvent motionEvent) {
-
+                public boolean onSingleTapConfirmed(@NotNull MotionEvent motionEvent) {
                     // If in popup mode, set task completed if tapped, otherwise hide the popup
-                    if (groupPopup.getVisibility() == View.VISIBLE) {
-                        Task touchedTask = getTouchedTaskItemPopup(motionEvent.getX(), motionEvent.getY());
-                        if (touchedTask == null) {
-                            groupPopup.setVisibility(View.INVISIBLE);
-                            popupBackground.setVisibility(View.INVISIBLE);
-                        } else {
-                            touchedTask.setCompleted(!touchedTask.getCompleted());
-                            taskViewModel.updateTask((Task) touchedTask);
-                            groupPopup.invalidate();
-                        }
+                    Task touchedTask = groupPopup.getTouchedTask(motionEvent.getX(), motionEvent.getY());
+                    if (touchedTask != null) {
+                        touchedTask.setCompleted(!touchedTask.getCompleted());
+                        taskViewModel.updateTask(touchedTask);
+                        groupPopup.invalidate();
                     }
-
-                    // If not in popup mode, mark tapped task as completed/incomplete
-                    // Create popup if a group is tapped
-                    else {
-                        TaskItem touchedTaskItem = getTouchedTaskItem(motionEvent.getX(), motionEvent.getY());
-                        if (touchedTaskItem != null) {
-                            if (touchedTaskItem instanceof Task) {
-                                ((Task) touchedTaskItem).setCompleted(!((Task) touchedTaskItem).getCompleted());
-                                taskViewModel.updateTask((Task) touchedTaskItem);
-                            } else {
-                                groupPopup.initialize((TaskGroup) touchedTaskItem);
-                                popupBackground.setVisibility(View.VISIBLE);
-                                groupPopup.setVisibility(View.VISIBLE);
-                            }
-                        }
-                        taskDraw.invalidate();  // update image
-                    }
-                    return true;    // necessary to prevent further action resulting from tap
+                    return true;
                 }
 
                 // Edit a task by double tapping it
                 @Override
                 public boolean onDoubleTap(MotionEvent motionEvent) {
-                    TaskItem touchedTaskItem;
-                    if (groupPopup.getVisibility() == View.VISIBLE) {
-                        touchedTaskItem = getTouchedTaskItemPopup(motionEvent.getX(), motionEvent.getY());
-                    } else {
-                        touchedTaskItem = getTouchedTaskItem(motionEvent.getX(), motionEvent.getY());
-                    }
-                    if (touchedTaskItem != null) {
-                        if (touchedTaskItem instanceof Task) {
-                            ((MainActivity) requireActivity()).editTask((Task) touchedTaskItem);
-                        }
-                    }
-                    return true;
+                    return editTask(motionEvent);
                 }
 
                 // Edit a task by pressing and holding the task, as well
                 @Override
                 public void onLongPress(MotionEvent motionEvent) {
-                    TaskItem touchedTaskItem;
-                    if (groupPopup.getVisibility() == View.VISIBLE) {
-                        touchedTaskItem = getTouchedTaskItemPopup(motionEvent.getX(), motionEvent.getY());
-                    } else {
-                        touchedTaskItem = getTouchedTaskItem(motionEvent.getX(), motionEvent.getY());
+                    editTask(motionEvent);
+                }
+
+                private boolean editTask(@NotNull MotionEvent motionEvent) {
+                    Task touchedTask = groupPopup.getTouchedTask(motionEvent.getX(), motionEvent.getY());
+
+                    if (touchedTask != null) {
+                        ((MainActivity) requireActivity()).editTask(touchedTask);
                     }
-                    if (touchedTaskItem != null) {
-                        if (touchedTaskItem instanceof Task) {
-                            ((MainActivity) requireActivity()).editTask((Task) touchedTaskItem);
-                        }
-                    }
+                    return true;
                 }
             };
 
-            // Finalize the tap responses and assign them to the drawing objects
-            final GestureDetector detector = new GestureDetector(context, listener);
-            detector.setOnDoubleTapListener(listener);
-            detector.setIsLongpressEnabled(true);
+            // Finalize tap responses for the task draw canvas and tie them with the view objects
+            final GestureDetector taskDrawDetector = new GestureDetector(context, taskDrawListener);
+            taskDrawDetector.setOnDoubleTapListener(taskDrawListener);
+            taskDrawDetector.setIsLongpressEnabled(true);
             taskDraw.setOnTouchListener((View taskView, MotionEvent motionEvent) ->
-                    detector.onTouchEvent(motionEvent));
+                    taskDrawDetector.onTouchEvent(motionEvent));
+
+            // Finalize tap responses for the group popup canvas and tie them with the view objects
+            final GestureDetector popUpDetector = new GestureDetector(context, groupPopupListener);
+            popUpDetector.setOnDoubleTapListener(groupPopupListener);
+            popUpDetector.setIsLongpressEnabled(true);
             groupPopup.setOnTouchListener((View taskView, MotionEvent motionEvent) ->
-                    detector.onTouchEvent(motionEvent));
+                    popUpDetector.onTouchEvent(motionEvent));
         });
-    }
-
-    // Method to retrieve a task from touch coordinates (only the first one if multiple items)
-    TaskItem getTouchedTaskItem(float x, float y) {
-        TaskDraw taskDraw = requireActivity().findViewById(R.id.task_draw);
-        return taskDraw.getTouchedTaskItems(x, y);
-    }
-
-    // Same process while popup is showing (for tasks within group only)
-    Task getTouchedTaskItemPopup(float x, float y) {
-        GroupPopup groupPopup = requireActivity().findViewById(R.id.group_popup);
-        return groupPopup.getTouchedTask(x, y);
     }
 }

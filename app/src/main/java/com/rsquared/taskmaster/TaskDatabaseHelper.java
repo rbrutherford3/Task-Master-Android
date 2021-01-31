@@ -147,7 +147,7 @@ public class TaskDatabaseHelper extends SQLiteOpenHelper {
     // SETTER METHODS
 
     // Add a new task to the database
-    public long addNewTask(@NotNull Task newTask) {
+    public long addTask(@NotNull Task newTask) {
 
         // Get the database
         SQLiteDatabase database = getWritableDatabase();
