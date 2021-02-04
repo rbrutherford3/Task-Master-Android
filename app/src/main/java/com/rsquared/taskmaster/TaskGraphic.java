@@ -2,6 +2,8 @@ package com.rsquared.taskmaster;
 
 import android.graphics.Rect;
 
+import org.jetbrains.annotations.NotNull;
+
 // Class for task information that is graphical in nature (coordinates, shapes)
 public class TaskGraphic {
 
@@ -14,11 +16,11 @@ public class TaskGraphic {
 
 	// CONSTRUCTORS
 
-	public TaskGraphic(Float baseline, Float checkBoxStart, Float textStart, Rect touchArea) {
-		this.baseline = baseline;
-		this.checkBoxStart = checkBoxStart;
-		this.textStart = textStart;
-		this.touchArea = touchArea;
+	public TaskGraphic(Float newBaseline, Float newCheckBoxStart, Float newTextStart, Rect newTouchArea) {
+		setBaseline(newBaseline);
+		setCheckBoxStart(newCheckBoxStart);
+		setTextStart(newTextStart);
+		setTouchArea(newTouchArea);
 	}
 
 	// GETTER METHODS
@@ -42,19 +44,19 @@ public class TaskGraphic {
 	// SETTER METHODS
 
 	public void setBaseline(Float y) {
-		this.baseline = y;
+		baseline = y;
 	}
 
 	public void setCheckBoxStart(Float x) {
-		this.checkBoxStart = x;
+		checkBoxStart = x;
 	}
 
 	public void setTextStart(Float x) {
-		this.textStart = x;
+		textStart = x;
 	}
 
 	public void setTouchArea(Rect area) {
-		this.touchArea = area;
+		touchArea = area;
 	}
 
 	public void move(int dx, int dy) {
@@ -66,11 +68,14 @@ public class TaskGraphic {
 
 	// DEBUGGING FUNCTIONS
 
-	public void debug() {
-		System.out.println("CONTENTS OF TaskGraphic INSTANCE:");
-		System.out.println("-baseline: " + baseline);
-		System.out.println("-checkBoxStart: " + checkBoxStart);
-		System.out.println("-textStart: " + textStart);
-		System.out.println("-touchArea: (no good way to display)");
+	@Override
+	public @NotNull String toString() {
+		String output = "";
+		output = output.concat("CONTENTS OF TaskGraphic INSTANCE:\n");
+		output = output.concat("-baseline: " + baseline + "\n");
+		output = output.concat("-checkBoxStart: " + checkBoxStart + "\n");
+		output = output.concat("-textStart: " + textStart + "\n");
+		output = output.concat("-touchArea: (no good way to display)\n");
+		return output;
 	}
 }

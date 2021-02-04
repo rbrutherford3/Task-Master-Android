@@ -4,13 +4,15 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 // This class for task groups, and is much like the task class
 public class TaskGroup {
 
 	// PRIVATE MEMBERS
 
-	private final int maxNudges = 3;
 	private ArrayList<Task> tasks = new ArrayList<>();
 	private String label;
 	private int averageImportance;
@@ -26,12 +28,6 @@ public class TaskGroup {
 		}
 	}
 
-	// Alternative constructor for array list instead of a list
-	public TaskGroup(@NotNull ArrayList<Task> tasks) {
-		for (Task task : tasks)
-			addTask(task);
-	}
-
 	// SETTER METHODS
 
 	// Create a list of groups
@@ -41,7 +37,7 @@ public class TaskGroup {
 	}
 
 	public void addTaskGroup(@NotNull TaskGroup taskGroup) {
-		for (Task task : taskGroup.tasks) {
+		for (Task task : taskGroup.getTasks()) {
 			addTask(task);
 		}
 	}
@@ -57,15 +53,15 @@ public class TaskGroup {
 		averageImportance = averageImportance / tasks.size();
 		averageUrgency = averageUrgency / tasks.size();
 
-		Collections.sort(tasks, (Task t1, Task t2) -> {
+		Collections.sort((List)tasks, (Task t1, Task t2) -> {
 			return t2.getImportance() - t1.getImportance(); // Descending
 		});
 
 		label = tasks.size() + " tasks";
 	}
 
-	public void setTaskGraphic(TaskGraphic taskGraphic) {
-		this.taskGraphic = taskGraphic;
+	public void setTaskGraphic(TaskGraphic newTaskGraphic) {
+		taskGraphic = newTaskGraphic;
 	}
 
 	// GETTER METHODS
@@ -90,10 +86,11 @@ public class TaskGroup {
 		return taskGraphic;
 	}
 
-	public boolean taskInGroup(Task task) {
+	public boolean isTaskInGroup(Task task) {
 		for (Task checkTask : tasks) {
-			if (task == checkTask)
+			if (task == checkTask) {
 				return true;
+			}
 		}
 		return false;
 	}

@@ -33,34 +33,19 @@ public class Task implements Parcelable {
     // 4 overloaded constructors (2 with 'ID', 2 w/out; 2 w/ boolean as 'completed',  2 w/ an int)
     private TaskGraphic taskGraphic;
 
-    public Task(long id, String label, int importance, int urgency, int completed) {
-        setID(id);
-        setLabel(label);
-        setImportance(importance);
-        setUrgency(urgency);
-        setCompleted(completed);
+    public Task(long newID, String newLabel, int newImportance, int newUrgency, boolean newCompleted) {
+        setID(newID);
+        setLabel(newLabel);
+        setImportance(newImportance);
+        setUrgency(newUrgency);
+        setCompleted(newCompleted);
     }
 
-    public Task(long id, String label, int importance, int urgency, boolean completed) {
-        setID(id);
-        setLabel(label);
-        setImportance(importance);
-        setUrgency(urgency);
-        setCompleted(completed);
-    }
-
-    public Task(String label, int importance, int urgency, int completed) {
-        setLabel(label);
-        setImportance(importance);
-        setUrgency(urgency);
-        setCompleted(completed);
-    }
-
-    public Task(String label, int importance, int urgency, boolean completed) {
-        setLabel(label);
-        setImportance(importance);
-        setUrgency(urgency);
-        setCompleted(completed);
+    public Task(String newLabel, int newImportance, int newUrgency, boolean newCompleted) {
+        setLabel(newLabel);
+        setImportance(newImportance);
+        setUrgency(newUrgency);
+        setCompleted(newCompleted);
     }
 
     // This constructor is for using the view model object, and not sure how to explain it
@@ -74,38 +59,38 @@ public class Task implements Parcelable {
 
     // SETTER FUNCTIONS
 
-    private void setID(long id) {
-       this._id = id;
+    private void setID(long newID) {
+       this._id = newID;
     }
 
-    public void setLabel(String label) {
-        this.label = label;
+    public void setLabel(String newLabel) {
+        label = newLabel;
     }
 
-    public void setImportance(int importance) {
-        if (validateImportance(importance))
-            this.importance = importance;
-        else
+    public void setImportance(int newImportance) {
+        if (validateImportance(newImportance)) {
+            importance = newImportance;
+        }
+        else {
             throw new IllegalArgumentException("Importance must be an integer between 0 and 100");
+        }
     }
 
-    public void setUrgency(int urgency) {
-        if (validateUrgency(urgency))
-            this.urgency = urgency;
-        else
+    public void setUrgency(int newUrgency) {
+        if (validateUrgency(newUrgency)) {
+            urgency = newUrgency;
+        }
+        else {
             throw new IllegalArgumentException("Urgency must be an integer between 0 and 100");
+        }
     }
 
-    public void setCompleted(boolean completed) {
-        this.completed = completed;
+    public void setCompleted(boolean newCompleted) {
+        completed = newCompleted;
     }
 
-    public void setCompleted(int completed) {
-        this.completed = sanitizeCompleted(completed);
-    }
-
-    public void setTaskGraphic(TaskGraphic taskGraphic) {
-        this.taskGraphic = taskGraphic;
+    public void setTaskGraphic(TaskGraphic newTaskGraphic) {
+        taskGraphic = newTaskGraphic;
     }
 
     // GETTER FUNCTIONS
@@ -138,7 +123,7 @@ public class Task implements Parcelable {
 
     // "Rating" is either "importance" or "urgency"
     public boolean validateRating(int rating) {
-        return ((rating >= 0) && (rating <= 100));
+        return rating >= 0 && rating <= 100;
     }
 
     public boolean validateImportance(int importance) {
@@ -149,20 +134,19 @@ public class Task implements Parcelable {
         return validateRating(urgency);
     }
 
-    private boolean sanitizeCompleted(int completed) {
-        return (completed >= 1);
-    }
-
     // DEBUG ONLY FUNCTION
 
-    public void debug() {
-        System.out.println("CONTENTS OF Task INSTANCE:");
-        System.out.println("-id: " + _id);
-        System.out.println("-label: " + label);
-        System.out.println("-importance: " + importance);
-        System.out.println("-urgency: " + urgency);
-        System.out.println("-completed " + completed);
-        taskGraphic.debug();
+    @Override
+    public @NotNull String toString() {
+        String output = "";
+        output = output.concat("CONTENTS OF Task INSTANCE:\n");
+        output = output.concat("-id: " + _id + "\n");
+        output = output.concat("-label: " + label + "\n");
+        output = output.concat("-importance: " + importance + "\n");
+        output = output.concat("-urgency: " + urgency + "\n");
+        output = output.concat("-completed " + completed + "\n");
+        output = output.concat(taskGraphic.toString());
+        return output;
     }
 
     // VIEW MODEL FUNCTIONS

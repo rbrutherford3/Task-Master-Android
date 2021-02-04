@@ -14,10 +14,6 @@ import org.jetbrains.annotations.NotNull;
 // Fragment for button to show form for adding a new task
 public class FragmentAddButton extends Fragment {
 
-    // Required empty public constructor
-    public FragmentAddButton() {
-    }
-
     // Provide an instance of this class
     public static @NotNull FragmentAddButton newInstance() {
         return new FragmentAddButton();

@@ -8,12 +8,13 @@
     tools:context=".FragmentAddOrModifyTask">
 
     <LinearLayout
+        android:id="@+id/input_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent" >
 
         <EditText
             android:id="@+id/edit_text_task"
@@ -42,7 +43,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/edit_text_task" />
 
-        <RelativeLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/relative_layout_importance_labels"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -53,6 +54,7 @@
             app:layout_constraintTop_toBottomOf="@id/seek_bar_importance">
 
             <TextView
+                android:id="@+id/importance_label_low"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
@@ -65,14 +67,20 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
+                android:id="@+id/importance_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerInParent="true"
+                android:gravity="center_horizontal"
                 android:text="@string/importance_label"
                 app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/importance_label_high"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/importance_label_low"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
+                android:id="@+id/importance_label_high"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
@@ -83,7 +91,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
-        </RelativeLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <SeekBar
             android:id="@+id/seek_bar_urgency"
@@ -98,7 +106,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/relative_layout_importance_labels" />
 
-        <RelativeLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/relative_layout_urgency_labels"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -109,6 +117,7 @@
             app:layout_constraintTop_toBottomOf="@id/seek_bar_importance">
 
             <TextView
+                android:id="@+id/urgency_label_low"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
@@ -121,14 +130,19 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
+                android:id="@+id/urgency_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerInParent="true"
                 android:text="@string/urgency_label"
                 app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/urgency_label_high"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/urgency_label_low"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
+                android:id="@+id/urgency_label_high"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
@@ -139,7 +153,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
-        </RelativeLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <Button
             android:id="@+id/button_submit_new_task"

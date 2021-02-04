@@ -9,6 +9,9 @@ import android.database.sqlite.SQLiteOpenHelper;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import static android.provider.BaseColumns._ID;
 import static com.rsquared.taskmaster.TaskDatabaseContract.DATABASE_NAME;
@@ -40,8 +43,9 @@ public class TaskDatabaseHelper extends SQLiteOpenHelper {
 
     public static synchronized TaskDatabaseHelper getInstance(Context context) {
         // Use the application context, which will ensure that you don't accidentally leak an Activity's context.
-        if (singletonTaskDatabaseHelper == null)
+        if (singletonTaskDatabaseHelper == null) {
             singletonTaskDatabaseHelper = new TaskDatabaseHelper(context.getApplicationContext());
+        }
         return singletonTaskDatabaseHelper;
     }
 
@@ -91,13 +95,14 @@ public class TaskDatabaseHelper extends SQLiteOpenHelper {
 
         // Save the information from the first query hit into the task to be returned
         if (cursor.moveToFirst()) {
-            long ID = cursor.getLong(cursor.getColumnIndexOrThrow(_ID));
+            id = cursor.getLong(cursor.getColumnIndexOrThrow(_ID));
             String taskName = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NAME_TASK));
             int importance = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_NAME_IMPORTANCE));
             int urgency = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_NAME_URGENCY));
-            boolean completed = (cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_NAME_COMPLETED)) >= 1);
-            task = new Task(ID, taskName, importance, urgency, completed);
-        } else {
+            boolean completed = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_NAME_COMPLETED)) >= 1;
+            task = new Task(id, taskName, importance, urgency, completed);
+        }
+        else {
             task = null;
         }
 
@@ -109,30 +114,32 @@ public class TaskDatabaseHelper extends SQLiteOpenHelper {
     }
 
     // Retrieve all tasks from the database that have yet to be completed
-    public ArrayList<Task> getTasks(boolean incompleteTasksOnly) {
+    public Set<Task> getTasks(boolean incompleteTasksOnly) {
 
         // Get database
         SQLiteDatabase database = getReadableDatabase();
 
         // Initialize task list return object
-        ArrayList<Task> tasks = new ArrayList<>();
+        Set<Task> tasks = new HashSet<>();
 
-        // Set up query (either all tasks are donwloaded or only incomplete tasks)
+        // Set up query (either all tasks are downloaded or only incomplete tasks)
         Cursor cursor;
-        if (incompleteTasksOnly)
+        if (incompleteTasksOnly) {
             cursor = database.rawQuery(QUERY_TABLE_INCOMPLETE, null);
-        else
+        }
+        else {
             cursor = database.rawQuery(QUERY_TABLE, null);
+        }
 
         // Pull information from database and store
         if (cursor.moveToFirst()) {
             while (!cursor.isAfterLast()) {
-                long ID = cursor.getLong(cursor.getColumnIndexOrThrow(_ID));
+                long id = cursor.getLong(cursor.getColumnIndexOrThrow(_ID));
                 String taskName = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NAME_TASK));
                 int importance = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_NAME_IMPORTANCE));
                 int urgency = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_NAME_URGENCY));
-                boolean completed = (cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_NAME_COMPLETED)) >= 1);
-                tasks.add(new Task(ID, taskName, importance, urgency, completed));
+                boolean completed = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_NAME_COMPLETED)) >= 1;
+                tasks.add(new Task(id, taskName, importance, urgency, completed));
                 cursor.moveToNext();
             }
         }

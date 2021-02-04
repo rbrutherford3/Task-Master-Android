@@ -27,12 +27,6 @@ public class FragmentTaskDraw extends Fragment {
     private ImageView popupBackground;      // Object for drawing pop up background
     private TaskViewModel taskViewModel;    // For accessing and modifying task information
 
-    // CONSTRUCTORS
-
-    // Required empty public constructor
-    public FragmentTaskDraw() {
-    }
-
     // Provide an instance of this class
     @Contract(" -> new")
     public static @NotNull FragmentTaskDraw newInstance() {

@@ -15,12 +15,11 @@ public class GroupPopup extends TaskDraw {
 
 	// INITIALIZE PRIVATE MEMBERS
 
-	private final int padding = 20;   // dp
-	private final int borderColor = 0xFF000000;
-	private final int borderThickness = 2;
+	private static final int padding = 20;   // dp
+	private static final int borderColor = 0xFF000000;
+	private static final int borderThickness = 2;
 	private TaskGroup taskGroup;
 	private Rect groupArea;
-	private int backgroundColor;
 
 	// Inherit constructor from parent
 	public GroupPopup(Context context, AttributeSet attrs) {
@@ -46,26 +45,27 @@ public class GroupPopup extends TaskDraw {
 	public void setGraphic() {
 
 		// Get the minimum size of the popup by joining each tasks' touch area
-		groupArea = new Rect(taskGroup.getTasks().get(0).getTaskGraphic().getTouchArea());
-		for (Task task : this.taskGroup.getTasks().subList(1, taskGroup.getTasks().size())) {
+		groupArea = new Rect();
+		for (Task task : this.taskGroup.getTasks()) {
 			groupArea.union(new Rect(task.getTaskGraphic().getTouchArea()));
 		}
 
 		// Determine where to move each task based on the area gathered above
 		float deltaX = -groupArea.left + padding;
 		float deltaY = -groupArea.top + padding;
-		for (Task task : taskGroup.getTasks())
+		for (Task task : taskGroup.getTasks()) {
 			task.getTaskGraphic().move((int) deltaX, (int) deltaY);
+		}
 	}
 
 	// Set up popup background color, border thickness, dimensions, etc
 	public void prepareCanvas() {
 
 		// Determine background color of popup based on group location on taskDraw
-		backgroundColor = getColor(taskGroup.getImportance(), taskGroup.getUrgency());
+		int backgroundColor = getColor(taskGroup.getImportance(), taskGroup.getUrgency());
 		FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) this.getLayoutParams();
-		params.height = (int) (groupArea.bottom - groupArea.top + 2 * padding);
-		params.width = (int) (groupArea.right - groupArea.left + 2 * padding);
+		params.height = groupArea.bottom - groupArea.top + 2 * padding;
+		params.width = groupArea.right - groupArea.left + 2 * padding;
 		setLayoutParams(params);
 		GradientDrawable gradientDrawable = new GradientDrawable();
 		gradientDrawable.setShape(GradientDrawable.RECTANGLE);
@@ -77,9 +77,11 @@ public class GroupPopup extends TaskDraw {
 	// Draw all the group's tasks
 	@Override
 	protected void onDraw(Canvas canvas) {
-		if (taskGroup != null)
-			for (Task task : taskGroup.getTasks())
+		if (taskGroup != null) {
+			for (Task task : taskGroup.getTasks()) {
 				drawTask(canvas, task);
+			}
+		}
 	}
 
 	// Return a task after touching an area by looping through each task and checking
@@ -89,8 +91,9 @@ public class GroupPopup extends TaskDraw {
 		for (Task task : taskGroup.getTasks()) {
 
 			// If the tap coordinates were inside the touch area for a task, then save the task
-			if (task.getTaskGraphic().getTouchArea().contains((int) x, (int) y))
+			if (task.getTaskGraphic().getTouchArea().contains((int) x, (int) y)) {
 				return task;
+			}
 		}
 		return null; // nothing hit if you've made it this far
 	}
@@ -135,8 +138,8 @@ public class GroupPopup extends TaskDraw {
 
 		// Compile intermediate colors
 
-		int yellowGreen = (yellowGreenA << 24 | yellowGreenR << 16 | yellowGreenG << 8 | yellowGreenB);
-		int yellowRed = (yellowRedA << 24 | yellowRedR << 16 | yellowRedG << 8 | yellowRedB);
+		int yellowGreen = yellowGreenA << 24 | yellowGreenR << 16 | yellowGreenG << 8 | yellowGreenB;
+		int yellowRed = yellowRedA << 24 | yellowRedR << 16 | yellowRedG << 8 | yellowRedB;
 
 		// For storing the color for each quadrant's corner
 		int upperLeft;
@@ -183,27 +186,27 @@ public class GroupPopup extends TaskDraw {
 
 		// Given quadrant, apply two-factor weight to the color of each corner to get final color
 
-		int resultA = (int) ((Color.alpha(upperLeft) * (yWeight * xWeight)) +
-				(Color.alpha(lowerRight) * (1 - xWeight) * (1 - yWeight)) +
-				(Color.alpha(upperRight) * yWeight * (1 - xWeight)) +
-				(Color.alpha(lowerLeft) * (1 - yWeight) * xWeight));
+		int resultA = (int) (Color.alpha(upperLeft) * (yWeight * xWeight) +
+				Color.alpha(lowerRight) * (1 - xWeight) * (1 - yWeight) +
+				Color.alpha(upperRight) * yWeight * (1 - xWeight) +
+				Color.alpha(lowerLeft) * (1 - yWeight) * xWeight);
 
-		int resultR = (int) ((Color.red(upperLeft) * (yWeight * xWeight)) +
-				(Color.red(lowerRight) * (1 - xWeight) * (1 - yWeight)) +
-				(Color.red(upperRight) * yWeight * (1 - xWeight)) +
-				(Color.red(lowerLeft) * (1 - yWeight) * xWeight));
+		int resultR = (int) (Color.red(upperLeft) * (yWeight * xWeight) +
+				Color.red(lowerRight) * (1 - xWeight) * (1 - yWeight) +
+				Color.red(upperRight) * yWeight * (1 - xWeight) +
+				Color.red(lowerLeft) * (1 - yWeight) * xWeight);
 
-		int resultG = (int) ((Color.green(upperLeft) * (yWeight * xWeight)) +
-				(Color.green(lowerRight) * (1 - xWeight) * (1 - yWeight)) +
-				(Color.green(upperRight) * yWeight * (1 - xWeight)) +
-				(Color.green(lowerLeft) * (1 - yWeight) * xWeight));
+		int resultG = (int) (Color.green(upperLeft) * (yWeight * xWeight) +
+				Color.green(lowerRight) * (1 - xWeight) * (1 - yWeight) +
+				Color.green(upperRight) * yWeight * (1 - xWeight) +
+				Color.green(lowerLeft) * (1 - yWeight) * xWeight);
 
-		int resultB = (int) ((Color.blue(upperLeft) * (yWeight * xWeight)) +
-				(Color.blue(lowerRight) * (1 - xWeight) * (1 - yWeight)) +
-				(Color.blue(upperRight) * yWeight * (1 - xWeight)) +
-				(Color.blue(lowerLeft) * (1 - yWeight) * xWeight));
+		int resultB = (int) (Color.blue(upperLeft) * (yWeight * xWeight) +
+				Color.blue(lowerRight) * (1 - xWeight) * (1 - yWeight) +
+				Color.blue(upperRight) * yWeight * (1 - xWeight) +
+				Color.blue(lowerLeft) * (1 - yWeight) * xWeight);
 
 		// Compile color and return result
-		return (resultA << 24 | resultR << 16 | resultG << 8 | resultB);
+		return resultA << 24 | resultR << 16 | resultG << 8 | resultB;
 	}
 }

@@ -40,11 +40,10 @@ public class FragmentAddOrModifyTask extends Fragment implements Parcelable {
 
     // Input objects:
     EditText editTextTask;
-    int editTextTaskHintColor;
     SeekBar seekBarImportance;
     SeekBar seekBarUrgency;
     Button buttonSubmitNewTask;
-    boolean newTask = false;    // new or existing task?
+    boolean isNewTask;    // new or existing task?
     Task existingTask;  // task to be modified, if editing
 
     // CONSTRUCTORS AND PARCEL-RELATED FUNCTIONS
@@ -53,11 +52,13 @@ public class FragmentAddOrModifyTask extends Fragment implements Parcelable {
 
     // Receive existing task as a parcel
     protected FragmentAddOrModifyTask(@NotNull Parcel in) {
+        isNewTask = in.readByte() == (byte) 1;
         existingTask = in.readParcelable(Task.class.getClassLoader());
     }
 
     // Required empty public constructor
     public FragmentAddOrModifyTask() {
+        // Intentionally empty
     }
 
     // Provide an instance of this class
@@ -71,11 +72,9 @@ public class FragmentAddOrModifyTask extends Fragment implements Parcelable {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (getArguments() == null)
-            newTask = true;
-        else {
-            existingTask = getArguments().getParcelable("editTask");
-            newTask = false;
+        isNewTask = requireArguments().getByte("isNewTask") == ((byte) 1);
+        if (!isNewTask) {
+            existingTask = requireArguments().getParcelable("editTask");
         }
     }
 
@@ -97,21 +96,21 @@ public class FragmentAddOrModifyTask extends Fragment implements Parcelable {
 
         // Grab inputs
         editTextTask = requireActivity().findViewById(R.id.edit_text_task);
-        editTextTaskHintColor = editTextTask.getCurrentHintTextColor();
         seekBarImportance = requireActivity().findViewById(R.id.seek_bar_importance);
         seekBarUrgency = requireActivity().findViewById(R.id.seek_bar_urgency);
         buttonSubmitNewTask = requireActivity().findViewById(R.id.button_submit_new_task);
 
         // On submission...
-        buttonSubmitNewTask.setOnClickListener((View l) -> {
+        buttonSubmitNewTask.setOnClickListener((View view0) -> {
             // Get text entered by user for the task
             String textTask = editTextTask.getText().toString();
 
             // Set hint color to red if nothing entered (for user feedback)
-            if (textTask.isEmpty())
+            if (textTask.isEmpty()) {
                 editTextTask.setHintTextColor(Color.RED);
+            }
             else {
-                if (newTask) {
+                if (isNewTask) {
 
                     // Create task based on user input
                     Task newTask = new Task(editTextTask.getText().toString(), seekBarImportance.getProgress(),
@@ -119,15 +118,18 @@ public class FragmentAddOrModifyTask extends Fragment implements Parcelable {
 
                     // Add that task to the view model (which will update the database)
                     taskViewModel.addTask(newTask);
-                } else {
+                }
+                else {
+                    if (existingTask != null) { // Possible that value went stale
 
-                    // Update existing task with new values from inputs
-                    existingTask.setLabel(editTextTask.getText().toString());
-                    existingTask.setImportance(seekBarImportance.getProgress());
-                    existingTask.setUrgency(seekBarUrgency.getProgress());
+                        // Update existing task with new values from inputs
+                        existingTask.setLabel(editTextTask.getText().toString());
+                        existingTask.setImportance(seekBarImportance.getProgress());
+                        existingTask.setUrgency(seekBarUrgency.getProgress());
 
-                    // Commit changes to ViewModel and database
-                    taskViewModel.updateTask(existingTask);
+                        // Commit changes to ViewModel and database
+                        taskViewModel.updateTask(existingTask);
+                    }
                 }
 
                 // Go back to "home" screen to view tasks
@@ -136,7 +138,7 @@ public class FragmentAddOrModifyTask extends Fragment implements Parcelable {
         });
 
         // If existing task was passed, then change the inputs to reflect current values
-        if (!newTask) {
+        if (!isNewTask) {
             ((EditText) requireActivity().findViewById(R.id.edit_text_task)).setText(existingTask.getLabel());
             ((SeekBar) requireActivity().findViewById(R.id.seek_bar_importance)).setProgress(existingTask.getImportance());
             ((SeekBar) requireActivity().findViewById(R.id.seek_bar_urgency)).setProgress(existingTask.getUrgency());

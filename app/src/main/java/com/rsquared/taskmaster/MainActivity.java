@@ -13,8 +13,8 @@ import androidx.lifecycle.ViewModelProvider;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
 import java.util.Objects;
+import java.util.Set;
 
 // Todo: possibly move from 0-100 selection to 0-10
 // Todo: Permanent notification for most important and urgent item (maybe next release)
@@ -35,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
         TaskViewModel taskViewModel = new ViewModelProvider(this).get(TaskViewModel.class);
 
         // OPTION TO RESET DATABASE (DEBUG ONLY)
-        //resetDatabase(true);
+        //resetDatabase();
 
         // Get all the unfinished tasks for display
         taskViewModel.downloadIncompleteTasks();
@@ -111,12 +111,17 @@ public class MainActivity extends AppCompatActivity {
 
     // Create fragment for adding a new task
     private @NotNull FragmentAddOrModifyTask newFragment() {
-        return FragmentAddOrModifyTask.newInstance();
+        Bundle bundle = new Bundle();
+        bundle.putByte("isNewTask", (byte) 1);
+        FragmentAddOrModifyTask fragmentAddOrModifyTask = FragmentAddOrModifyTask.newInstance();
+        fragmentAddOrModifyTask.setArguments(bundle);
+        return fragmentAddOrModifyTask;
     }
 
     // Create fragment for editing an existing task
     private @NotNull FragmentAddOrModifyTask newFragmentWithTask(Task task) {
         Bundle bundle = new Bundle();
+        bundle.putByte("isNewTask", (byte) 0);
         bundle.putParcelable("editTask", task);
         FragmentAddOrModifyTask fragmentAddOrModifyTask = FragmentAddOrModifyTask.newInstance();
         fragmentAddOrModifyTask.setArguments(bundle);
@@ -133,52 +138,10 @@ public class MainActivity extends AppCompatActivity {
 
     // DEBUGGING FUNCTIONS
 
-    // Debugging function for checking system state
-    public void seeResults(@NotNull ArrayList<Task> tasks) {
-        // Display task details
-        int count = 0;
-        StringBuilder msg = new StringBuilder();
-        for (Task task : tasks) {
-            count++;
-            msg.append(task.getLabel()).append(", urgency = ").append(task.getUrgency()).append(", importance = ").
-                    append(task.getImportance()).append(System.getProperty("line.separator"));
-        }
-        if (count == 0) {
-            msg.append("EMPTY DATABASE");
-        }
-        System.out.println(msg.toString());
-    }
-
     // Debugging function to drop the database and start a new one
-    private void resetDatabase(boolean dummyValues) {
+    public void resetDatabase() {
         TaskDatabaseHelper taskDatabaseHelper = TaskDatabaseHelper.getInstance(this);
         taskDatabaseHelper.dropTable();
         taskDatabaseHelper.createTable();
-        if (dummyValues) {
-            Task test1 = new Task("This", 75, 75, false);
-            Task test2 = new Task("is", 75, 25, false);
-            Task test3 = new Task("a", 25, 25, false);
-            Task test4 = new Task("test", 25, 75, false);
-            Task test5 = new Task("don't", 50, 50, false);
-            Task test6 = new Task("tread", 50, 50, false);
-            Task test7 = new Task("on", 50, 50, false);
-            Task test8 = new Task("me!", 50, 50, false);
-            long id1 = taskDatabaseHelper.addTask(test1);
-            long id2 = taskDatabaseHelper.addTask(test2);
-            long id3 = taskDatabaseHelper.addTask(test3);
-            long id4 = taskDatabaseHelper.addTask(test4);
-            long id5 = taskDatabaseHelper.addTask(test5);
-            long id6 = taskDatabaseHelper.addTask(test6);
-            long id7 = taskDatabaseHelper.addTask(test7);
-            long id8 = taskDatabaseHelper.addTask(test8);
-            Task task1check = taskDatabaseHelper.getTask(id1);
-            Task task2check = taskDatabaseHelper.getTask(id2);
-            Task task3check = taskDatabaseHelper.getTask(id3);
-            Task task4check = taskDatabaseHelper.getTask(id4);
-            Task task5check = taskDatabaseHelper.getTask(id5);
-            Task task6check = taskDatabaseHelper.getTask(id6);
-            Task task7check = taskDatabaseHelper.getTask(id7);
-            Task task8check = taskDatabaseHelper.getTask(id8);
-        }
     }
 }

@@ -18,6 +18,7 @@ public final class TaskDatabaseContract {
     // To prevent someone from accidentally instantiating the contract class,
     // give it an empty constructor.
     private TaskDatabaseContract() {
+        // Purposefully empty
     }
 
     // Inner class to define the actual creation/destruction queries

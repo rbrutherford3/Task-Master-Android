@@ -14,11 +14,6 @@ import org.jetbrains.annotations.NotNull;
 // Simple fragment to display text instructions
 public class FragmentInstructions extends Fragment {
 
-    // CONSTRUCTORS
-
-    // Required empty public constructor
-    public FragmentInstructions() {}
-
     // Provide an instance of this class
     @Contract(" -> new")
     public static @NotNull FragmentInstructions newInstance() {
