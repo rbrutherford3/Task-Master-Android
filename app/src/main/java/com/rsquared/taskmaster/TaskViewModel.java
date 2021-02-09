@@ -65,11 +65,13 @@ public class TaskViewModel extends AndroidViewModel {
   // Store all incomplete tasks from the database to the task list array (used at the beginning)
   public void downloadIncompleteTasks() {
     if (!downloadTasksLocked) {
+      tasks.clear();
+      taskGroups.clear();
       tasks.addAll(taskDatabaseHelper.getTasks(true));
       downloadTasksLocked = true;
-    } else {
-      throw new IllegalStateException("Downloading from the database should occur only once");
-    }
+    } // else {
+    // throw new IllegalStateException("Downloading from the database should occur only once");
+    // }
   }
 
   public void deGroupTasks() {

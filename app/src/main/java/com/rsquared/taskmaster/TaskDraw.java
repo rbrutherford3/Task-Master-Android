@@ -29,7 +29,7 @@ public class TaskDraw extends View {
   protected static final float strokeCheckmark = 10; // thickness of check mark
   protected static final float arrowLength = 50;
   protected static final float arrowPointLength = 20;
-  protected static final float maxNudgeRatio = 2; // Only nudge up to 2x the height of a task
+  protected static final float maxNudgeRatio = (float) 0.10; // Only nudge up to 10% importance
   protected static final String labelVertical = "IMPORTANCE";
   protected static final String labelHorizontal = "URGENCY";
   // Paint objects used for drawing on canvas
@@ -348,7 +348,7 @@ public class TaskDraw extends View {
         float yBaseline = task.getTaskGraphic().getBaseline();
         float yBaselineDest = topOfTasks - padding - fontTop + counter * paddedTaskHeight;
         float nudgeY = yBaselineDest - yBaseline;
-        if (Math.abs(nudgeY) > maxNudgeRatio * paddedTaskHeight) { // Only move tasks so far
+        if (Math.abs(nudgeY) / heightCanvas > maxNudgeRatio) { // Only move tasks so far
           return false;
         }
 
