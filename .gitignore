@@ -92,3 +92,5 @@ lint/tmp/
 /.idea/
 /app/src/androidTest/java/com/rsquared/taskmaster/
 /app/src/test/java/com/rsquared/taskmaster/
+/Logo/
+*.jks
