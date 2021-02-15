@@ -51,7 +51,7 @@ public class TaskGroup {
     averageUrgency = averageUrgency / tasks.size();
 
     Collections.sort(
-        (List) tasks,
+        (List<Task>) tasks,
         (Task t1, Task t2) -> {
           return t2.getImportance() - t1.getImportance(); // Descending
         });

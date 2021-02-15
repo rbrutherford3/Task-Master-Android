@@ -1,5 +1,7 @@
 # Task Master
 
+![logo](app/src/main/ic_launcher-playstore.png)
+
 Task Master is an Android application that functions as a to-do list.  Unlike regular to-do lists, this application incorporates user-defined importance and urgency levels to create a colored visualization.  More important tasks rise to the top, and more urgent tasks go to the left.  The upper-left corner is red (high importance and urgency) and the lower-right corner is green (low importance and urgency).  This setup was inspired by the book *Seven Habits of Highly Effective People* by Stephen Covey.
 
 This app is to make a task list appear more manageable by having all tasks displayed on a single screen without  scrolling or multiple pages.  The only exception is when a popup is provided for a group of tasks in a cluster.  It is also intended to allow the user to more effectively prioritize their tasks once seen on the importance/urgency spectrum.
@@ -93,9 +95,9 @@ In case the the canvas in `TaskDraw` becomes too crowded in any given area, tha 
 
 ## Running tests
 
-If you wish to perform some tests on the system, there is a commented line in `MainActivity.java` fairly close to the beginning of the file that says `//resetDatabase(true);`.  Simply uncomment this line and you will always start with a fresh set of sample tasks (including a group of tasks), or you can change the boolean argument to `false` if you wish to start off with an empty database.
+If you wish to perform some tests on the system, there is a function in `MainActivity.java` called `resetDatabase()`.  Calling this function if you wish to start from scratch with some custom values for testing.
 
-***Warning! Uncommenting this code will completely erase any tasks you've created!  Use with caution!***
+***Warning! Using this function will completely erase any tasks you've created!  Use with caution!***
 
 ### Example tests
 
@@ -108,10 +110,12 @@ Here are some examples of tests that were performed on this app prior to commiti
 * Creating many tasks in the same vicinity and making sure the app replaces it with `+(# of tasks) Tasks`, a group of tasks graphic
 * Make sure the background color of a popup for a group of tasks is appropriate for it's location (i.e.: background at that location is red, so the background color of the popup for a group of tasks has the same color, or close to it)
 * Given a group of tasks, try adding a task to the group, moving a task out of the group, and marking a task within a group popup as completed and then restarting to see if it dissapeared as expected
+* Rotate the view while the app is running
+* Turn off screen while the app is running and turn it on again
 
 ## Deployment
 
-This project is not yet on the Google Play store, so right now only developers can use it by compiling the source code in Android Studio.
+This app is avaialable for download on [Google Play](https://play.google.com/store/apps/details?id=com.rsquared.taskmaster)
 
 ## Built With
 
