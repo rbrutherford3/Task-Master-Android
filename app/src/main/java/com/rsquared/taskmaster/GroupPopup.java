@@ -7,6 +7,7 @@ import android.graphics.Rect;
 import android.graphics.drawable.GradientDrawable;
 import android.util.AttributeSet;
 import android.widget.FrameLayout;
+
 import androidx.core.content.ContextCompat;
 
 // Class for popup view that generates when the user taps on a group (uses TaskDraw as model)
@@ -101,44 +102,45 @@ public class GroupPopup extends TaskDraw {
   // A 3-value gradient can be interpreted as 4 2-color gradients, four quadrants w/ four corners
   public int getColor(int importance, int urgency) {
 
-    // Get colors and derive mixed colors
-    int red = ContextCompat.getColor(getContext(), R.color.highest);
-    int green = ContextCompat.getColor(getContext(), R.color.lowest);
-    int yellow = ContextCompat.getColor(getContext(), R.color.middle);
+    // Get colors from layout file
+
+    int highest = ContextCompat.getColor(getContext(), R.color.highest);
+    int middle = ContextCompat.getColor(getContext(), R.color.middle);
+    int lowest = ContextCompat.getColor(getContext(), R.color.lowest);
 
     // Divide each color into color bands
 
-    int redA = Color.alpha(red);
-    int redR = Color.red(red);
-    int redG = Color.green(red);
-    int redB = Color.blue(red);
+    int highestA = (highest >> 24) & 0xFF;
+    int highestR = (highest >> 16) & 0xFF;
+    int highestB = (highest >> 8) & 0xFF;
+    int highestG = highest & 0xFF;
 
-    int greenA = Color.alpha(green);
-    int greenR = Color.red(green);
-    int greenG = Color.green(green);
-    int greenB = Color.blue(green);
+    int lowestA = (lowest >> 24) & 0xFF;
+    int lowestR = (lowest >> 16) & 0xFF;
+    int lowestB = (lowest >> 8) & 0xFF;
+    int lowestG = lowest & 0xFF;
 
-    int yellowA = Color.alpha(yellow);
-    int yellowR = Color.red(yellow);
-    int yellowG = Color.green(yellow);
-    int yellowB = Color.blue(yellow);
+    int middleA = (middle >> 24) & 0xFF;
+    int middleR = (middle >> 16) & 0xFF;
+    int middleB = (middle >> 8) & 0xFF;
+    int middleG = middle & 0xFF;
 
     // Compile intermediate colors by averaging in each band
 
-    int yellowGreenA = (yellowA + greenA) / 2;
-    int yellowGreenR = (yellowR + greenR) / 2;
-    int yellowGreenG = (yellowG + greenG) / 2;
-    int yellowGreenB = (yellowB + greenB) / 2;
+    int lowMixA = (middleA + lowestA) / 2;
+    int lowMixR = (middleR + lowestR) / 2;
+    int lowMixG = (middleG + lowestG) / 2;
+    int lowMixB = (middleB + lowestB) / 2;
 
-    int yellowRedA = (yellowA + redA) / 2;
-    int yellowRedR = (yellowR + redR) / 2;
-    int yellowRedG = (yellowG + redG) / 2;
-    int yellowRedB = (yellowB + redB) / 2;
+    int highMixA = (middleA + highestA) / 2;
+    int highMixR = (middleR + highestR) / 2;
+    int highMixG = (middleG + highestG) / 2;
+    int highMixB = (middleB + highestB) / 2;
 
     // Compile intermediate colors
 
-    int yellowGreen = yellowGreenA << 24 | yellowGreenR << 16 | yellowGreenG << 8 | yellowGreenB;
-    int yellowRed = yellowRedA << 24 | yellowRedR << 16 | yellowRedG << 8 | yellowRedB;
+    int lowMix = lowMixA << 24 | lowMixR << 16 | lowMixB << 8 | lowMixG;
+    int highMix = highMixA << 24 | highMixR << 16 | highMixB << 8 | highMixG;
 
     // For storing the color for each quadrant's corner
     int upperLeft;
@@ -155,31 +157,31 @@ public class GroupPopup extends TaskDraw {
       yWeight = (importance - 50) / (float) 50;
       if (urgency > 50) {
         xWeight = (urgency - 50) / (float) 50;
-        upperLeft = red;
-        upperRight = yellowRed;
-        lowerRight = yellow;
-        lowerLeft = yellowRed;
+        upperLeft = highest;
+        upperRight = highMix;
+        lowerRight = middle;
+        lowerLeft = highMix;
       } else {
         xWeight = urgency / (float) 50;
-        upperLeft = yellowRed;
-        upperRight = yellow;
-        lowerRight = yellowGreen;
-        lowerLeft = yellow;
+        upperLeft = highMix;
+        upperRight = middle;
+        lowerRight = lowMix;
+        lowerLeft = middle;
       }
     } else {
       yWeight = importance / (float) 50;
       if (urgency < 50) {
         xWeight = urgency / (float) 50;
-        upperLeft = yellow;
-        upperRight = yellowGreen;
-        lowerRight = green;
-        lowerLeft = yellowGreen;
+        upperLeft = middle;
+        upperRight = lowMix;
+        lowerRight = lowest;
+        lowerLeft = lowMix;
       } else {
         xWeight = (urgency - 50) / (float) 50;
-        upperLeft = yellowRed;
-        upperRight = yellow;
-        lowerRight = yellowGreen;
-        lowerLeft = yellow;
+        upperLeft = highMix;
+        upperRight = middle;
+        lowerRight = lowMix;
+        lowerLeft = middle;
       }
     }
 
