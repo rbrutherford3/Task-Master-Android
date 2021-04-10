@@ -60,10 +60,10 @@ public class TaskGraphic {
   }
 
   public void move(int dx, int dy) {
-    setBaseline(getBaseline() + dy);
-    setCheckBoxStart(getCheckBoxStart() + dx);
-    setTextStart(getTextStart() + dx);
-    getTouchArea().offset(dx, dy);
+    this.setBaseline(getBaseline() + dy);
+    this.setCheckBoxStart(getCheckBoxStart() + dx);
+    this.setTextStart(getTextStart() + dx);
+    touchArea.offset(dx, dy);
   }
 
   // DEBUGGING FUNCTIONS
