@@ -1,16 +1,16 @@
 package com.rsquared.taskmaster;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
-import org.jetbrains.annotations.NotNull;
 
 // This class for task groups, and is much like the task class
 public class TaskGroup {
 
   // PRIVATE MEMBERS
 
-  private ArrayList<Task> tasks = new ArrayList<>();
+  private final ArrayList<Task> tasks = new ArrayList<>();
   private String label;
   private int averageImportance;
   private int averageUrgency;
@@ -28,14 +28,17 @@ public class TaskGroup {
   // SETTER METHODS
 
   // Create a list of groups
-  public void addTask(@NotNull Task task) {
-    tasks.add(task);
-    combine();
-  }
-
-  public void addTaskGroup(@NotNull TaskGroup taskGroup) {
-    for (Task task : taskGroup.getTasks()) {
-      addTask(task);
+  public void addTask(@NotNull Task newTask) {
+    boolean addTask = true;
+    for (Task task : tasks) {
+      if (newTask == task) {
+        addTask = false;
+        break;
+      }
+    }
+    if (addTask) {
+      tasks.add(newTask);
+      combine();
     }
   }
 
@@ -51,7 +54,7 @@ public class TaskGroup {
     averageUrgency = averageUrgency / tasks.size();
 
     Collections.sort(
-        (List<Task>) tasks,
+        tasks,
         (Task t1, Task t2) -> {
           return t2.getImportance() - t1.getImportance(); // Descending
         });

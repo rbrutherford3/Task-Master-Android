@@ -3,7 +3,6 @@ package com.rsquared.taskmaster;
 import static android.provider.BaseColumns._ID;
 import static com.rsquared.taskmaster.TaskDatabaseContract.DATABASE_NAME;
 import static com.rsquared.taskmaster.TaskDatabaseContract.DATABASE_VERSION;
-import static com.rsquared.taskmaster.TaskDatabaseContract.Table;
 import static com.rsquared.taskmaster.TaskDatabaseContract.Table.COLUMN_NAME_COMPLETED;
 import static com.rsquared.taskmaster.TaskDatabaseContract.Table.COLUMN_NAME_IMPORTANCE;
 import static com.rsquared.taskmaster.TaskDatabaseContract.Table.COLUMN_NAME_TASK;
@@ -54,11 +53,6 @@ public class TaskDatabaseHelper extends SQLiteOpenHelper {
     getWritableDatabase().execSQL(DROP_TABLE);
   }
 
-  // Set up the database (for initial use only)
-  public void createTable() {
-    getWritableDatabase().execSQL(CREATE_TABLE);
-  }
-
   // OVER-RIDDEN METHODS
 
   @Override
@@ -80,35 +74,6 @@ public class TaskDatabaseHelper extends SQLiteOpenHelper {
   }
 
   // GETTER METHODS
-
-  // Get a particular task (using id) from the database
-  public Task getTask(long id) {
-
-    // Get database
-    SQLiteDatabase database = getReadableDatabase();
-
-    // Setup up query
-    Cursor cursor = database.rawQuery(Table.getTaskQuery(id), null);
-    Task task;
-
-    // Save the information from the first query hit into the task to be returned
-    if (cursor.moveToFirst()) {
-      id = cursor.getLong(cursor.getColumnIndexOrThrow(_ID));
-      String taskName = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NAME_TASK));
-      int importance = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_NAME_IMPORTANCE));
-      int urgency = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_NAME_URGENCY));
-      boolean completed = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_NAME_COMPLETED)) >= 1;
-      task = new Task(id, taskName, importance, urgency, completed);
-    } else {
-      task = null;
-    }
-
-    // Close database connection
-    cursor.close();
-
-    // Return task object compiled from database entry
-    return task;
-  }
 
   // Retrieve all tasks from the database that have yet to be completed
   public Set<Task> getTasks(boolean incompleteTasksOnly) {
@@ -150,7 +115,7 @@ public class TaskDatabaseHelper extends SQLiteOpenHelper {
   // SETTER METHODS
 
   // Add a new task to the database
-  public long addTask(@NotNull Task newTask) {
+  public void addTask(@NotNull Task newTask) {
 
     // Get the database
     SQLiteDatabase database = getWritableDatabase();
@@ -163,7 +128,7 @@ public class TaskDatabaseHelper extends SQLiteOpenHelper {
     values.put(COLUMN_NAME_COMPLETED, newTask.getCompleted());
 
     // Insert the new row, returning the primary key value of the new row
-    return database.insert(TABLE_NAME, null, values);
+	  database.insert(TABLE_NAME, null, values);
   }
 
   // Update a task's information (used to modify task and also mark complete/incomplete

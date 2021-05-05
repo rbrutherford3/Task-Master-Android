@@ -2,16 +2,25 @@ package com.rsquared.taskmaster;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Point;
+import android.graphics.Rect;
+import android.os.Build;
 import android.os.Bundle;
+import android.view.DragEvent;
 import android.view.GestureDetector;
 import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.DragShadowBuilder;
+import android.view.View.OnDragListener;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -53,13 +62,11 @@ public class FragmentTaskDraw extends Fragment {
     view.post(
         () -> {
 
+          // Set up taskDraw, related views, and canvases
+          setupViews();
+
           // Initialize private members
-          taskDraw = requireActivity().findViewById(R.id.task_draw);
-          groupPopup = requireActivity().findViewById(R.id.group_popup);
-          popupBackground = requireActivity().findViewById(R.id.popup_background);
-          taskViewModel = new ViewModelProvider(requireActivity()).get(TaskViewModel.class);
-          taskViewModel.deGroupTasks();
-          taskDraw.initialize(taskViewModel, taskDraw.getWidth(), taskDraw.getHeight());
+          final float[] startCoordinates = new float[2];
 
           final Context context = getContext();
 
@@ -112,26 +119,79 @@ public class FragmentTaskDraw extends Fragment {
                 // Edit a task by double tapping it
                 @Override
                 public boolean onDoubleTap(MotionEvent motionEvent) {
-                  return editTask(motionEvent);
+                  editTask(motionEvent);
+                  return true;
                 }
 
-                // Edit a task by pressing and holding the task, as well
+                // Move a task by pressing and holding the task
                 @Override
-                public void onLongPress(MotionEvent motionEvent) {
-                  editTask(motionEvent);
+                public void onLongPress(@NotNull MotionEvent motionEvent) {
+
+                  // Which task was pressed on?
+                  startCoordinates[0] = motionEvent.getX();
+                  startCoordinates[1] = motionEvent.getY();
+                  Task touchedTask = taskDraw.getTouchedTask(startCoordinates[0], startCoordinates[1]);
+
+                  // Create shadow builder to display task while being dragged and dropped
+                  if (touchedTask != null) {
+                    MyDragShadowBuilder shadowBuilder = new MyDragShadowBuilder(touchedTask);
+
+                    // Past a certain Android release, the function name changed
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                      taskDraw.startDragAndDrop(null, shadowBuilder, touchedTask, 0);
+                    }
+                    else {
+                      taskDraw.startDrag(null, shadowBuilder, touchedTask, 0);
+                    }
+                  }
                 }
 
                 // If editing an existing task, then pull up the edit task fragment
-                private boolean editTask(@NotNull MotionEvent motionEvent) {
+                private void editTask(@NotNull MotionEvent motionEvent) {
                   Task touchedTask =
                       taskDraw.getTouchedTask(motionEvent.getX(), motionEvent.getY());
 
                   if (touchedTask != null) {
                     ((MainActivity) requireActivity()).editTask(touchedTask);
                   }
-                  return true;
                 }
               };
+
+          // While dragging, display blown up task graphic under the user's finger
+          final OnDragListener dragListener = (View v, DragEvent event) -> {
+
+            // Get phase of drag and task
+            int action = event.getAction();
+            Task newTask = (Task)(event.getLocalState());
+
+            // For each relevant drag state...
+            switch (action) {
+
+              // Refresh screen (without dragged task) at drag beginning
+              case DragEvent.ACTION_DRAG_STARTED:
+                newTask.setMoving(true);
+                setupViews();
+                break;
+
+              // Grab the location of the dropped task and assign new urgency and importance levels
+              case DragEvent.ACTION_DROP:
+                float dx = event.getX() - startCoordinates[0];
+                float dy = event.getY() - startCoordinates[1];
+                int[] values = taskDraw.getRatingDifferences(dx, dy);
+                newTask.setUrgency(newTask.getUrgency() + values[0]);
+                newTask.setImportance(newTask.getImportance() + values[1]);
+                newTask.setTaskGraphic(taskDraw.setGraphic(newTask.getLabel(), newTask.getImportance(), newTask.getUrgency()));
+                break;
+
+              // Stop drag process and update the new information up the chain, refresh screen
+              case DragEvent.ACTION_DRAG_ENDED:
+                newTask.setMoving(false);
+                taskViewModel.updateTask(newTask);
+                setupViews();
+                break;
+            }
+            return true;
+          };
 
           // TAP LISTENER FOR THE GROUP POPUP CANVAS AND THE TASKS THEREIN
 
@@ -162,23 +222,54 @@ public class FragmentTaskDraw extends Fragment {
                 // Edit a task by double tapping it
                 @Override
                 public boolean onDoubleTap(MotionEvent motionEvent) {
-                  return editTask(motionEvent);
+                  editTask(motionEvent);
+                  return true;
                 }
 
-                // Edit a task by pressing and holding the task, as well
+                // Move task by pressing and holding the task, as well
                 @Override
                 public void onLongPress(MotionEvent motionEvent) {
-                  editTask(motionEvent);
+                  dragTask(motionEvent);
                 }
 
-                private boolean editTask(@NotNull MotionEvent motionEvent) {
+                // Get task and pull up editing screen
+                private void editTask(@NotNull MotionEvent motionEvent) {
                   Task touchedTask =
                       groupPopup.getTouchedTask(motionEvent.getX(), motionEvent.getY());
 
                   if (touchedTask != null) {
                     ((MainActivity) requireActivity()).editTask(touchedTask);
                   }
-                  return true;
+                }
+
+                // Function to enter dragging mode
+                private void dragTask(@NotNull MotionEvent motionEvent) {
+
+                  // Get the selected task
+                  Task touchedTask = groupPopup.getTouchedTask(motionEvent.getX(), motionEvent.getY());
+
+                  // If a task was selected...
+                  if (touchedTask != null) {
+
+                    // Temporarily hide the task from the screen, enter drag builder
+                    touchedTask.setMoving(true);
+                    MyDragShadowBuilder shadowBuilder = new MyDragShadowBuilder(touchedTask);
+
+                    // Grab a fake beginning location of the task on the canvas (to calculate new
+                    // importance and urgency after the task is dropped, need values to compare)
+                    taskDraw.getPixelCoordinates(touchedTask.getImportance(), touchedTask.getUrgency());
+
+                    // Past a certain Android release, the function name changed
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                      taskDraw.startDragAndDrop(null, shadowBuilder, touchedTask, 0);
+                    } else {
+                      taskDraw.startDrag(null, shadowBuilder, touchedTask, 0);
+                    }
+
+                    // Hide group popup
+                    groupPopup.setVisibility(View.INVISIBLE);
+                    popupBackground.setVisibility(View.INVISIBLE);
+                  }
                 }
               };
 
@@ -189,6 +280,7 @@ public class FragmentTaskDraw extends Fragment {
           taskDraw.setOnTouchListener(
               (View taskView, MotionEvent motionEvent) ->
                   taskDrawDetector.onTouchEvent(motionEvent));
+          taskDraw.setOnDragListener(dragListener);
 
           // Finalize tap responses for the group popup canvas and tie them with the view objects
           final GestureDetector popUpDetector = new GestureDetector(context, groupPopupListener);
@@ -197,5 +289,45 @@ public class FragmentTaskDraw extends Fragment {
           groupPopup.setOnTouchListener(
               (View taskView, MotionEvent motionEvent) -> popUpDetector.onTouchEvent(motionEvent));
         });
+  }
+
+  // Customize task display while being dragged
+  class MyDragShadowBuilder extends DragShadowBuilder {
+
+    final Task movedTask;
+    final float scaleFactor = (float) 3;  // How much bigger should the task appear while dragging?
+
+    public MyDragShadowBuilder(@NotNull Task task) {
+      movedTask = task;
+    }
+
+    @Override
+    public void onProvideShadowMetrics(@NotNull Point shadowSize, @NotNull Point shadowTouchPoint) {
+
+      // Get outline of task touch area for measurement
+      Rect touchArea = new Rect(movedTask.getTaskGraphic().getTouchArea());
+      float shadowWidth = scaleFactor * (touchArea.right - touchArea.left);
+      float shadowHeight = scaleFactor * (touchArea.bottom - touchArea.top);
+      // Needs to be slightly bigger than image to avoid flickering
+      shadowSize.set((int) shadowWidth + 1, (int) shadowHeight + 1);
+      // Finger at bottom center:
+      shadowTouchPoint.set((int) shadowWidth / 2, (int) shadowHeight);
+    }
+
+    @Override
+    public void onDrawShadow(Canvas canvas) {
+      // Draw over-sized task graphic
+      taskDraw.drawTask(canvas, movedTask, scaleFactor, true);
+    }
+  }
+
+  // Set up all the views and their attributes, reset the data, and display
+  private void setupViews() {
+    taskDraw = requireActivity().findViewById(R.id.task_draw);
+    groupPopup = requireActivity().findViewById(R.id.group_popup);
+    popupBackground = requireActivity().findViewById(R.id.popup_background);
+    taskViewModel = new ViewModelProvider(requireActivity()).get(TaskViewModel.class);
+    taskViewModel.deGroupTasks();
+    taskDraw.initialize(taskViewModel, taskDraw.getWidth(), taskDraw.getHeight());
   }
 }

@@ -10,6 +10,9 @@ import android.widget.FrameLayout;
 
 import androidx.core.content.ContextCompat;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 // Class for popup view that generates when the user taps on a group (uses TaskDraw as model)
 public class GroupPopup extends TaskDraw {
 
@@ -19,7 +22,6 @@ public class GroupPopup extends TaskDraw {
   private static final int borderColor = 0xFF000000;
   private static final int borderThickness = 2;
   private TaskGroup taskGroup;
-  private Rect groupArea;
 
   // Inherit constructor from parent
   public GroupPopup(Context context, AttributeSet attrs) {
@@ -32,8 +34,50 @@ public class GroupPopup extends TaskDraw {
     setupPaintText();
     setGroup(taskGroup);
     nudgeTasks(taskGroup, true);
+    setDimensions();
     setGraphic();
     prepareCanvas();
+  }
+
+  // Get dimensions for the group popup ahead of time, base on the location and size of tasks
+  protected void setDimensions() {
+
+    // Declare and initialize individual values
+    float leftest = 0;
+    float rightest = 0;
+    float highest = 0;
+    float lowest = 0;
+
+    // Get the lowest lows and the highest highs of the collection of task graphics
+    if (taskGroup.getTasks().size() > 0) {
+      boolean first = true;
+      for (Task task : taskGroup.getTasks()) {
+        Rect touchArea = task.getTaskGraphic().getTouchArea();
+        if (first) {
+          first = false;
+          leftest = touchArea.left;
+          rightest = touchArea.right;
+          highest = touchArea.top;
+          lowest = touchArea.bottom;
+        } else {
+          leftest = min(leftest, touchArea.left);
+          rightest = max(rightest, touchArea.right);
+          highest = min(highest, touchArea.top);
+          lowest = max(lowest, touchArea.bottom);
+        }
+      }
+
+      // Translate the values gathered into canvas dimensions (with a little bit of a margin)
+      widthCanvas = rightest - leftest + 2*marginInner;
+      heightCanvas = lowest - highest + 2*marginInner;
+
+      // Translate values into uniform displacement to the origin, and move
+      float deltaX = -leftest + marginInner;
+      float deltaY = -highest + marginInner;
+      for (Task task : taskGroup.getTasks()) {
+        task.getTaskGraphic().move((int) deltaX, (int) deltaY);
+      }
+    }
   }
 
   // User defined group
@@ -45,7 +89,7 @@ public class GroupPopup extends TaskDraw {
   public void setGraphic() {
 
     // Get the minimum size of the popup by joining each tasks' touch area
-    groupArea = new Rect();
+    Rect groupArea = new Rect();
     for (Task task : this.taskGroup.getTasks()) {
       groupArea.union(new Rect(task.getTaskGraphic().getTouchArea()));
     }
@@ -64,8 +108,8 @@ public class GroupPopup extends TaskDraw {
     // Determine background color of popup based on group location on taskDraw
     int backgroundColor = getColor(taskGroup.getImportance(), taskGroup.getUrgency());
     FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) this.getLayoutParams();
-    params.height = groupArea.bottom - groupArea.top + 2 * padding;
-    params.width = groupArea.right - groupArea.left + 2 * padding;
+    params.height = (int) heightCanvas;
+    params.width = (int) widthCanvas;
     setLayoutParams(params);
     GradientDrawable gradientDrawable = new GradientDrawable();
     gradientDrawable.setShape(GradientDrawable.RECTANGLE);
@@ -79,7 +123,8 @@ public class GroupPopup extends TaskDraw {
   protected void onDraw(Canvas canvas) {
     if (taskGroup != null) {
       for (Task task : taskGroup.getTasks()) {
-        drawTask(canvas, task);
+        drawTask(canvas, task, 1, false);
+        System.out.println(task.toString());
       }
     }
   }
@@ -98,7 +143,7 @@ public class GroupPopup extends TaskDraw {
     return null; // nothing hit if you've made it this far
   }
 
-  // Determine color of popup based on the groups' relative location on the taskdraw canvas
+  // Determine color of popup based on the groups' relative location on the taskDraw canvas
   // A 3-value gradient can be interpreted as 4 2-color gradients, four quadrants w/ four corners
   public int getColor(int importance, int urgency) {
 

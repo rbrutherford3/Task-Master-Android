@@ -159,6 +159,6 @@ public class FragmentAddOrModifyTask extends Fragment implements Parcelable {
 
   @Override
   public void writeToParcel(@NotNull Parcel dest, int flags) {
-    dest.writeParcelable(existingTask, flags);
+    dest.writeParcelable((Parcelable) existingTask, flags);
   }
 }

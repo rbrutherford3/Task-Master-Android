@@ -7,11 +7,15 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.view.View;
+
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
+
+import static android.graphics.Rect.intersects;
 
 // Class to perform all graphic operations (drawing on canvas, etc)
 public class TaskDraw extends View {
@@ -19,11 +23,12 @@ public class TaskDraw extends View {
   // INITIALIZE PRIVATE MEMBERS
 
   // Constants for sizing
+  protected static final float scaleAdjustment = 1;
   protected static final float checkBoxSide = 30; // length of one side of the checkboxes
-  protected static final float marginOuter = 15; // distance between screen edges and axes labels
-  protected static final float marginInner = 15; // distance between axis label and margin edge
-  protected static final float spacing = 15; // distance between checkbox and text
-  protected static final float padding = 15; // how far the touch area of a task should extend
+  protected static final float marginOuter = 20; // distance between screen edges and axes labels
+  protected static final float marginInner = 20; // distance between axis label and margin edge
+  protected static final float spacing = 20; // distance between checkbox and text
+  protected static final float padding = 20; // how far the touch area of a task should extend
   protected static final float textSize = 40; // height of text characters
   protected static final float stroke = 2; // thickness of text and checkbox
   protected static final float strokeCheckmark = 10; // thickness of check mark
@@ -144,6 +149,15 @@ public class TaskDraw extends View {
     return new float[] {x, y};
   }
 
+  // Inverse of function above
+  public int[] getRatingDifferences(float x, float y) {
+    float percentX = x / (widthCanvas - 2 * margin);
+    float percentY = y / (heightCanvas - 2 * margin - (fontBottom - fontTop));
+    int urgencyDifference = (int) ( - 100 * percentX);
+    int importanceDifference = (int) ( - 100 * percentY);
+    return new int[] {urgencyDifference, importanceDifference};
+  }
+
   // SETUP FUNCTIONS
 
   // Derive values for axis labels with arrows (arrows drawn manually, many lines)
@@ -252,7 +266,7 @@ public class TaskDraw extends View {
   }
 
   // Function to get all the necessary dimensions for the task label, check box, and check mark.
-  // These metrics are stored in hash maps in taskViewModel to be pulled during an 'ondraw()' call
+  // These metrics are stored in hash maps in taskViewModel to be pulled during an 'onDraw()' call
   @Contract("_, _, _ -> new")
   protected @NotNull TaskGraphic setGraphic(String label, int importance, int urgency) {
 
@@ -325,8 +339,8 @@ public class TaskDraw extends View {
     float taskHeight = fontBottom - fontTop;
     float paddedTaskHeight = taskHeight + 2 * padding;
     float totalTaskHeight = numTasks * paddedTaskHeight;
-    float topOfTasks = yOrigin - totalTaskHeight / 2 - totalTaskHeight % 2;
-    float bottomOfTasks = yOrigin + totalTaskHeight / 2;
+    float topOfTasks = (float) (yOrigin - totalTaskHeight / 2.0);
+    float bottomOfTasks = (float) (yOrigin + totalTaskHeight / 2.0);
 
     // Adjust so margins are not crossed
     // (Note that we assume that the tasks don't cross both the top and bottom, that they fit)
@@ -346,7 +360,7 @@ public class TaskDraw extends View {
 
         // See if the minimum required nudging exceeds the predetermined movement limit
         float yBaseline = task.getTaskGraphic().getBaseline();
-        float yBaselineDest = topOfTasks - padding - fontTop + counter * paddedTaskHeight;
+        float yBaselineDest = topOfTasks + padding - fontTop + counter * paddedTaskHeight;
         float nudgeY = yBaselineDest - yBaseline;
         if (Math.abs(nudgeY) / heightCanvas > maxNudgeRatio) { // Only move tasks so far
           return false;
@@ -377,7 +391,7 @@ public class TaskDraw extends View {
     int counter = 0;
     for (Task task : taskGroup.getTasks()) {
       float yBaseline = task.getTaskGraphic().getBaseline();
-      float yBaselineDest = topOfTasks - padding - fontTop + counter * paddedTaskHeight;
+      float yBaselineDest = topOfTasks + padding - fontTop + counter * paddedTaskHeight;
       float nudgeY = yBaselineDest - yBaseline;
       task.getTaskGraphic().move(0, (int) nudgeY);
       counter++;
@@ -389,6 +403,7 @@ public class TaskDraw extends View {
   // Any task that overlaps another task or a group becomes part of that group
   protected void overlappingTasks() {
 
+    taskViewModel.deGroupTasks();
     boolean newPairingFound;
     Set<Task> tasks = taskViewModel.getTasks();
     Set<TaskGroup> taskGroups = taskViewModel.getTaskGroups();
@@ -396,10 +411,6 @@ public class TaskDraw extends View {
     // Make sure all the graphic information is up-to-date (including tasks in groups)
     for (Task task : tasks) {
       setTaskGraphic(task);
-    }
-
-    for (TaskGroup taskGroup : taskGroups) {
-      setTaskGroupGraphic(taskGroup);
     }
 
     // Loop through possible pairs until two that overlap are found,
@@ -422,7 +433,7 @@ public class TaskDraw extends View {
           // See if item touch areas overlap and group them together (groups and/or tasks)
           Rect touchArea = task.getTaskGraphic().getTouchArea();
           Rect otherTouchArea = otherTask.getTaskGraphic().getTouchArea();
-          if (touchArea.intersect(otherTouchArea)) {
+          if (intersects(touchArea, otherTouchArea)) {
             newPairingFound = true; // Break while loop to start over with new info
 
             // Combine into groups:
@@ -446,8 +457,7 @@ public class TaskDraw extends View {
         }
       }
 
-      // Todo: this area below needs be organized better (check first, then add/remove, not vice
-      // versa)
+      // Todo: this area below needs be organized better (check first, then add/remove, not vice versa)
 
       // Add new groups to the master list for groups and remove grouped tasks from master
       // list for tasks (because they are now a part of a group, eliminates redundancy)
@@ -501,7 +511,9 @@ public class TaskDraw extends View {
         drawTaskGroup(canvas, taskGroup);
       }
       for (Task task : taskViewModel.getTasks()) {
-        drawTask(canvas, task);
+        if (!task.getMoving()){
+          drawTask(canvas, task, scaleAdjustment, false);
+        }
       }
       setupCanvas(canvas); // Draw axes elements
     }
@@ -563,36 +575,61 @@ public class TaskDraw extends View {
 
   // Draw the task onto the canvas (because this function has the potential to be
   // called very frequently, no calculations or large allocations are performed here)
-  protected void drawTask(@NotNull Canvas canvas, @NotNull Task task) {
+  protected void drawTask(@NotNull Canvas canvas, @NotNull Task task, float scaleFactor, boolean center) {
+
+    // Modify to center, not align to origin
+
+    float displacementX = 1;
 
     TaskGraphic graphic = task.getTaskGraphic();
     String label = task.getLabel();
 
     // Pull the pre-determined position information for the task
-    float yBaseline = graphic.getBaseline();
-    float xCheckbox = graphic.getCheckBoxStart();
-    float xText = graphic.getTextStart();
+    float yBaseline;
+    if (center) {
+      yBaseline = canvas.getHeight();
+    }
+    else {
+      yBaseline = graphic.getBaseline();
+    }
+    float xCheckbox = scaleFactor*graphic.getCheckBoxStart() + displacementX;
+    float xText = scaleFactor*graphic.getTextStart() + displacementX;
 
+
+    if (center) {
+      if (xText >  xCheckbox) {
+        xText = xText - xCheckbox + displacementX;
+        xCheckbox = displacementX;
+      }
+      else {
+        xCheckbox = xCheckbox - xText + displacementX;
+        xText = displacementX;
+      }
+    }
     // Draw checkbox
     canvas.drawRect(
-        xCheckbox, yBaseline - checkBoxSide, xCheckbox + checkBoxSide, yBaseline, paintRect);
+        xCheckbox, yBaseline - scaleFactor*checkBoxSide,
+        xCheckbox + scaleFactor*checkBoxSide, yBaseline, paintRect);
 
     // Display the label in the pre-determined position
+    float originalTextSize = paintText.getTextSize();
+    paintText.setTextSize(paintText.getTextSize()*scaleFactor);
     canvas.drawText(label, xText, yBaseline, paintText);
+    paintText.setTextSize(originalTextSize);
 
     // If task is completed, add a check mark
     if (task.getCompleted()) {
       canvas.drawLine(
-          xCheckbox + checkBoxSide,
-          (float) (yBaseline - (1.5 * checkBoxSide)),
-          (float) (xCheckbox + (0.5 * checkBoxSide)),
+          scaleFactor*(xCheckbox + checkBoxSide),
+          (float) (yBaseline - (1.5 * scaleFactor * checkBoxSide)),
+          (float) (xCheckbox + (0.5 * scaleFactor * checkBoxSide)),
           yBaseline,
           paintCheckMark);
       canvas.drawLine(
-          (float) (xCheckbox + (0.5 * checkBoxSide)),
+          (float) (xCheckbox + (0.5 * scaleFactor * checkBoxSide)),
           yBaseline,
           xCheckbox,
-          (float) (yBaseline - (0.5 * checkBoxSide)),
+          (float) (yBaseline - (0.5 * scaleFactor * checkBoxSide)),
           paintCheckMark);
     }
   }

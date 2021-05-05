@@ -2,16 +2,20 @@ package com.rsquared.taskmaster;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProvider;
-import java.util.Objects;
+
 import org.jetbrains.annotations.NotNull;
+
+import java.util.Objects;
 
 // Todo: possibly move from 0-100 selection to 0-10
 // Todo: Permanent notification for most important and urgent item (maybe next release)
@@ -104,7 +108,6 @@ public class MainActivity extends AppCompatActivity {
     Bundle bundle = new Bundle();
     bundle.putByte("isNewTask", (byte) 1);
     FragmentAddOrModifyTask fragmentAddOrModifyTask = FragmentAddOrModifyTask.newInstance();
-    fragmentAddOrModifyTask.setRetainInstance(true);
     fragmentAddOrModifyTask.setArguments(bundle);
     return fragmentAddOrModifyTask;
   }
@@ -113,9 +116,8 @@ public class MainActivity extends AppCompatActivity {
   private @NotNull FragmentAddOrModifyTask newFragmentModifyTask(Task task) {
     Bundle bundle = new Bundle();
     bundle.putByte("isNewTask", (byte) 0);
-    bundle.putParcelable("editTask", task);
+    bundle.putParcelable("editTask", (Parcelable) task);
     FragmentAddOrModifyTask fragmentAddOrModifyTask = FragmentAddOrModifyTask.newInstance();
-    fragmentAddOrModifyTask.setRetainInstance(true);
     fragmentAddOrModifyTask.setArguments(bundle);
     return fragmentAddOrModifyTask;
   }
@@ -131,18 +133,8 @@ public class MainActivity extends AppCompatActivity {
   private void finalizeTransaction(
       @NotNull FragmentTransaction fragmentTransaction, Fragment @NotNull ... fragments) {
     for (Fragment fragment : fragments) {
-      fragment.setRetainInstance(true);
       fragmentTransaction.add(R.id.linear_layout_placeholder, fragment);
     }
     fragmentTransaction.commit();
-  }
-
-  // DEBUGGING FUNCTIONS
-
-  // Debugging function to drop the database and start a new one
-  public void resetDatabase() {
-    TaskDatabaseHelper taskDatabaseHelper = TaskDatabaseHelper.getInstance(this);
-    taskDatabaseHelper.dropTable();
-    taskDatabaseHelper.createTable();
   }
 }

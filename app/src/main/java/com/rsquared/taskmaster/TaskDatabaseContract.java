@@ -1,8 +1,6 @@
 package com.rsquared.taskmaster;
 
 import android.provider.BaseColumns;
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 
 // Defines all the information necessary for the database access
 public final class TaskDatabaseContract {
@@ -62,11 +60,5 @@ public final class TaskDatabaseContract {
         "SELECT * FROM " + TABLE_NAME + " WHERE " + COLUMN_NAME_COMPLETED + "=0";
 
     public static final String ID_CLAUSE = _ID + "=?";
-
-    // Get an individual task from the database using the id
-    @Contract(pure = true)
-    public static @NotNull String getTaskQuery(long id) {
-      return "SELECT * FROM " + TABLE_NAME + " WHERE " + _ID + "=" + id;
-    }
   }
 }
