@@ -43,7 +43,10 @@ public class FragmentAddOrModifyTask extends Fragment implements Parcelable {
   SeekBar seekBarUrgency;
   Button buttonSubmitNewTask;
   boolean isNewTask; // new or existing task?
+  boolean hasRatings;
   Task existingTask; // task to be modified, if editing
+  int urgency;
+  int importance;
 
   // CONSTRUCTORS AND PARCEL-RELATED FUNCTIONS
   // Get new instance of taskViewModel to save information (Source of task information)
@@ -52,7 +55,16 @@ public class FragmentAddOrModifyTask extends Fragment implements Parcelable {
   // Receive existing task as a parcel
   protected FragmentAddOrModifyTask(@NotNull Parcel in) {
     isNewTask = in.readByte() == (byte) 1;
-    existingTask = in.readParcelable(Task.class.getClassLoader());
+    if (isNewTask) {
+      hasRatings = in.readByte() == (byte) 1;
+      if (hasRatings) {
+        urgency = in.readInt();
+        importance = in.readInt();
+      }
+    }
+    else {
+      existingTask = in.readParcelable(Task.class.getClassLoader());
+    }
   }
 
   // Required empty public constructor
@@ -71,8 +83,16 @@ public class FragmentAddOrModifyTask extends Fragment implements Parcelable {
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
-    isNewTask = requireArguments().getByte("isNewTask") == ((byte) 1);
-    if (!isNewTask) {
+    // Determine if user is creating a new task (and from where) or modifying an existing one
+    isNewTask = requireArguments().getByte("isNewTask") == (byte) 1;
+    if (isNewTask) {
+      hasRatings = requireArguments().getByte("hasRatings") == (byte) 1;
+      if (hasRatings) {
+        importance = requireArguments().getInt("importance");
+        urgency = requireArguments().getInt("urgency");
+      }
+    }
+    else {
       existingTask = requireArguments().getParcelable("editTask");
     }
   }
@@ -95,8 +115,8 @@ public class FragmentAddOrModifyTask extends Fragment implements Parcelable {
 
     // Grab inputs
     editTextTask = requireActivity().findViewById(R.id.edit_text_task);
-    seekBarImportance = requireActivity().findViewById(R.id.seek_bar_importance);
     seekBarUrgency = requireActivity().findViewById(R.id.seek_bar_urgency);
+    seekBarImportance = requireActivity().findViewById(R.id.seek_bar_importance);
     buttonSubmitNewTask = requireActivity().findViewById(R.id.button_submit_new_task);
 
     // On submission...
@@ -115,8 +135,8 @@ public class FragmentAddOrModifyTask extends Fragment implements Parcelable {
               Task newTask =
                   new Task(
                       editTextTask.getText().toString(),
-                      seekBarImportance.getProgress(),
                       seekBarUrgency.getProgress(),
+                      seekBarImportance.getProgress(),
                       false);
 
               // Add that task to the view model (which will update the database)
@@ -126,8 +146,8 @@ public class FragmentAddOrModifyTask extends Fragment implements Parcelable {
 
                 // Update existing task with new values from inputs
                 existingTask.setLabel(editTextTask.getText().toString());
-                existingTask.setImportance(seekBarImportance.getProgress());
                 existingTask.setUrgency(seekBarUrgency.getProgress());
+                existingTask.setImportance(seekBarImportance.getProgress());
 
                 // Commit changes to ViewModel and database
                 taskViewModel.updateTask(existingTask);
@@ -139,8 +159,15 @@ public class FragmentAddOrModifyTask extends Fragment implements Parcelable {
           }
         });
 
+    // If a double tap for a new task occurred, then fill importance and urgency with tapped values
+    if (isNewTask && hasRatings) {
+      ((SeekBar) requireActivity().findViewById(R.id.seek_bar_urgency))
+          .setProgress(urgency);
+      ((SeekBar) requireActivity().findViewById(R.id.seek_bar_importance))
+          .setProgress(importance);
+    }
     // If existing task was passed, then change the inputs to reflect current values
-    if (!isNewTask) {
+    else if (!isNewTask) {
       ((EditText) requireActivity().findViewById(R.id.edit_text_task))
           .setText(existingTask.getLabel());
       ((SeekBar) requireActivity().findViewById(R.id.seek_bar_importance))

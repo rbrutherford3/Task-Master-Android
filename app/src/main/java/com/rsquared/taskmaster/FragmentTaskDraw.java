@@ -116,10 +116,22 @@ public class FragmentTaskDraw extends Fragment {
                   return true; // necessary to prevent further action resulting from tap
                 }
 
-                // Edit a task by double tapping it
+                // Edit a task by double tapping it or create a new one by double tapping empty space
                 @Override
                 public boolean onDoubleTap(MotionEvent motionEvent) {
-                  editTask(motionEvent);
+                  float x = motionEvent.getX();
+                  float y = motionEvent.getY();
+                  Task touchedTask =
+                      taskDraw.getTouchedTask(x, y);
+                  if (touchedTask == null) {
+                    int[] ratings = taskDraw.getRatings(x, y);
+                    int urgency = ratings[0];
+                    int importance = ratings[1];
+                    ((MainActivity) requireActivity()).addTask(urgency, importance);
+                  }
+                  else {
+                    ((MainActivity) requireActivity()).editTask(touchedTask);
+                  }
                   return true;
                 }
 
@@ -145,16 +157,6 @@ public class FragmentTaskDraw extends Fragment {
                     }
                   }
                 }
-
-                // If editing an existing task, then pull up the edit task fragment
-                private void editTask(@NotNull MotionEvent motionEvent) {
-                  Task touchedTask =
-                      taskDraw.getTouchedTask(motionEvent.getX(), motionEvent.getY());
-
-                  if (touchedTask != null) {
-                    ((MainActivity) requireActivity()).editTask(touchedTask);
-                  }
-                }
               };
 
           // While dragging, display blown up task graphic under the user's finger
@@ -175,12 +177,12 @@ public class FragmentTaskDraw extends Fragment {
 
               // Grab the location of the dropped task and assign new urgency and importance levels
               case DragEvent.ACTION_DROP:
-                float dx = event.getX() - startCoordinates[0];
-                float dy = event.getY() - startCoordinates[1];
-                int[] values = taskDraw.getRatingDifferences(dx, dy);
-                newTask.setUrgency(newTask.getUrgency() + values[0]);
-                newTask.setImportance(newTask.getImportance() + values[1]);
-                newTask.setTaskGraphic(taskDraw.setGraphic(newTask.getLabel(), newTask.getImportance(), newTask.getUrgency()));
+                float x = event.getX();
+                float y = event.getY();
+                int[] ratings = taskDraw.getRatings(x, y);
+                newTask.setUrgency(ratings[0]);
+                newTask.setImportance(ratings[1]);
+                newTask.setTaskGraphic(taskDraw.setGraphic(newTask.getLabel(), newTask.getUrgency(), newTask.getImportance()));
                 break;
 
               // Stop drag process and update the new information up the chain, refresh screen
@@ -257,7 +259,7 @@ public class FragmentTaskDraw extends Fragment {
 
                     // Grab a fake beginning location of the task on the canvas (to calculate new
                     // importance and urgency after the task is dropped, need values to compare)
-                    taskDraw.getPixelCoordinates(touchedTask.getImportance(), touchedTask.getUrgency());
+                    taskDraw.getPixelCoordinates(touchedTask.getUrgency(), touchedTask.getImportance());
 
                     // Past a certain Android release, the function name changed
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {

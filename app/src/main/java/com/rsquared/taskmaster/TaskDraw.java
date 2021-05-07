@@ -35,8 +35,8 @@ public class TaskDraw extends View {
   protected static final float arrowLength = 50;
   protected static final float arrowPointLength = 20;
   protected static final float maxNudgeRatio = (float) 0.10; // Only nudge up to 10% importance
-  protected static final String labelVertical = "IMPORTANCE";
   protected static final String labelHorizontal = "URGENCY";
+  protected static final String labelVertical = "IMPORTANCE";
   // Paint objects used for drawing on canvas
   protected Paint paintRect;
   protected Paint paintCheckMark;
@@ -54,8 +54,8 @@ public class TaskDraw extends View {
   protected float[][][] arrowHorizontal;
   protected float[][][] arrowVertical;
   // Canvas dimensions (should be the same -> square)
-  protected float heightCanvas;
   protected float widthCanvas;
+  protected float heightCanvas;
 
   // Store a taskViewModel passed in from MainActivity, because views cannot initiate view models
   private TaskViewModel taskViewModel;
@@ -71,7 +71,7 @@ public class TaskDraw extends View {
 
   // Function to determine the relative position on the urgency vs importance graphic
   @Contract(value = "_, _ -> new", pure = true)
-  public static float @NotNull [] getPercentCoordinates(int importance, int urgency) {
+  public static float @NotNull [] getPercentCoordinates(int urgency, int importance) {
     float x = (100 - (float) urgency) / 100;
     float y = (100 - (float) importance) / 100;
     return new float[] {x, y};
@@ -138,8 +138,8 @@ public class TaskDraw extends View {
   // GETTER FUNCTIONS
 
   // Function to determine the absolute distance position on the urgency vs importance graphic
-  protected float[] getPixelCoordinates(int importance, int urgency) {
-    float[] percentCoordinates = getPercentCoordinates(importance, urgency);
+  protected float[] getPixelCoordinates(int urgency, int importance) {
+    float[] percentCoordinates = getPercentCoordinates(urgency, importance);
     float x = percentCoordinates[0] * (widthCanvas - 2 * margin) + margin;
     float y =
         percentCoordinates[1] * (heightCanvas - 2 * margin - (fontBottom - fontTop))
@@ -150,12 +150,12 @@ public class TaskDraw extends View {
   }
 
   // Inverse of function above
-  public int[] getRatingDifferences(float x, float y) {
-    float percentX = x / (widthCanvas - 2 * margin);
-    float percentY = y / (heightCanvas - 2 * margin - (fontBottom - fontTop));
-    int urgencyDifference = (int) ( - 100 * percentX);
-    int importanceDifference = (int) ( - 100 * percentY);
-    return new int[] {urgencyDifference, importanceDifference};
+  public int[] getRatings(float x, float y) {
+    float percentX = (x - margin) / (widthCanvas - 2 * margin - (fontBottom - fontTop));
+    float percentY = (y - margin) / (heightCanvas - 2 * margin - (fontBottom - fontTop));
+    int urgency = (int) (100 * (1.0 - percentX));
+    int importance = (int) (100 * (1.0 - percentY));
+    return new int[] {urgency, importance};
   }
 
   // SETUP FUNCTIONS
@@ -253,27 +253,27 @@ public class TaskDraw extends View {
 
   public void setTaskGraphic(@NotNull Task task) {
     String label = task.getLabel();
-    int importance = task.getImportance();
     int urgency = task.getUrgency();
-    task.setTaskGraphic(setGraphic(label, importance, urgency));
+    int importance = task.getImportance();
+    task.setTaskGraphic(setGraphic(label, urgency, importance));
   }
 
   public void setTaskGroupGraphic(@NotNull TaskGroup taskGroup) {
     String label = taskGroup.getLabel();
-    int importance = taskGroup.getImportance();
     int urgency = taskGroup.getUrgency();
-    taskGroup.setTaskGraphic(setGraphic(label, importance, urgency));
+    int importance = taskGroup.getImportance();
+    taskGroup.setTaskGraphic(setGraphic(label, urgency, importance));
   }
 
   // Function to get all the necessary dimensions for the task label, check box, and check mark.
   // These metrics are stored in hash maps in taskViewModel to be pulled during an 'onDraw()' call
   @Contract("_, _, _ -> new")
-  protected @NotNull TaskGraphic setGraphic(String label, int importance, int urgency) {
+  protected @NotNull TaskGraphic setGraphic(String label, int urgency, int importance) {
 
     // Get the position on the canvas for the given task
-    float[] coordinates = getPixelCoordinates(importance, urgency);
-    float xOrigin = coordinates[0]; // The horizontal position of the left side of the checkbox
-    float yOrigin = coordinates[1]; // The baseline for text and checkbox
+    float[] coordinates = getPixelCoordinates(urgency, importance);
+    float x = coordinates[0]; // The horizontal position of the left side of the checkbox
+    float y = coordinates[1]; // The baseline for text and checkbox
 
     // Create the dimensions for the task text on the canvas
     Rect rectText = new Rect(); // Outlines the text
@@ -284,8 +284,8 @@ public class TaskDraw extends View {
 
     float width = checkBoxSide + spacing + textWidth;
 
-    float bottom = yOrigin + fontBottom;
-    float top = yOrigin + fontTop;
+    float bottom = y + fontBottom;
+    float top = y + fontTop;
 
     float rectLeft;
     float rectRight;
@@ -298,17 +298,17 @@ public class TaskDraw extends View {
     float checkBoxStart;
 
     // See if contents should be on left or right of origin
-    if (xOrigin + width > widthCanvas - margin) {
-      rectRight = xOrigin;
-      rectLeft = xOrigin - checkBoxSide;
+    if (x + width > widthCanvas - margin) {
+      rectRight = x;
+      rectLeft = x - checkBoxSide;
       checkBoxStart = rectLeft;
       textRight = rectLeft - spacing;
       textLeft = textRight - textWidth;
       left = textLeft;
       right = rectRight;
     } else {
-      rectLeft = xOrigin;
-      rectRight = xOrigin + checkBoxSide;
+      rectLeft = x;
+      rectRight = x + checkBoxSide;
       checkBoxStart = rectLeft;
       textLeft = rectRight + spacing;
       textRight = textLeft + textWidth;
@@ -322,7 +322,7 @@ public class TaskDraw extends View {
     touchArea.inset(-(int) padding, -(int) padding);
 
     // Update measurements in taskViewModel (so they don't have to be recalculated on drawing)
-    return new TaskGraphic(yOrigin, checkBoxStart, textLeft, touchArea);
+    return new TaskGraphic(y, checkBoxStart, textLeft, touchArea);
   }
 
   // This function moves ("nudges") individual tasks that overlap so they are next to each other
@@ -330,7 +330,7 @@ public class TaskDraw extends View {
   protected boolean nudgeTasks(@NotNull TaskGroup taskGroup, boolean forceNudge) {
 
     // Get the position on the canvas for the given task
-    float[] coordinates = getPixelCoordinates(taskGroup.getImportance(), taskGroup.getUrgency());
+    float[] coordinates = getPixelCoordinates(taskGroup.getUrgency(), taskGroup.getImportance());
     float yOrigin = coordinates[1]; // The vertical position of the baseline
     // (lower edge of checkbox and baseline for text)
 

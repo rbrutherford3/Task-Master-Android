@@ -93,6 +93,14 @@ public class MainActivity extends AppCompatActivity {
     finalizeTransaction(fragmentTransaction, fragmentAddOrModifyTask);
   }
 
+  // Bring up a screen for a new task with importance and urgency already established
+  public void addTask(int urgency, int importance) {
+    FragmentTransaction fragmentTransaction = prepareTransaction();
+    FragmentAddOrModifyTask fragmentAddOrModifyTask = newFragmentAddTask(urgency, importance);
+    fragmentAddOrEdit = true;
+    finalizeTransaction(fragmentTransaction, fragmentAddOrModifyTask);
+  }
+
   // Bring up a screen for editing an existing task
   public void editTask(Task task) {
     FragmentTransaction fragmentTransaction = prepareTransaction();
@@ -103,10 +111,23 @@ public class MainActivity extends AppCompatActivity {
 
   // PIECEMEAL PRIVATE METHODS FOR CHANGING FRAGMENTS (USED BY ABOVE METHODS)
 
-  // Create fragment for adding a new task
+  // Create fragment for adding a new task (urgency and importance not yet set)
   private @NotNull FragmentAddOrModifyTask newFragmentAddTask() {
     Bundle bundle = new Bundle();
     bundle.putByte("isNewTask", (byte) 1);
+    bundle.putByte("hasRatings", (byte) 0);
+    FragmentAddOrModifyTask fragmentAddOrModifyTask = FragmentAddOrModifyTask.newInstance();
+    fragmentAddOrModifyTask.setArguments(bundle);
+    return fragmentAddOrModifyTask;
+  }
+
+  // Create fragment for adding a new task with pre-determined importance and urgency
+  private @NotNull FragmentAddOrModifyTask newFragmentAddTask(int urgency, int importance) {
+    Bundle bundle = new Bundle();
+    bundle.putByte("isNewTask", (byte) 1);
+    bundle.putByte("hasRatings", (byte) 1);
+    bundle.putInt("urgency", urgency);
+    bundle.putInt("importance", importance);
     FragmentAddOrModifyTask fragmentAddOrModifyTask = FragmentAddOrModifyTask.newInstance();
     fragmentAddOrModifyTask.setArguments(bundle);
     return fragmentAddOrModifyTask;
@@ -116,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
   private @NotNull FragmentAddOrModifyTask newFragmentModifyTask(Task task) {
     Bundle bundle = new Bundle();
     bundle.putByte("isNewTask", (byte) 0);
-    bundle.putParcelable("editTask", (Parcelable) task);
+    bundle.putParcelable("editTask", task);
     FragmentAddOrModifyTask fragmentAddOrModifyTask = FragmentAddOrModifyTask.newInstance();
     fragmentAddOrModifyTask.setArguments(bundle);
     return fragmentAddOrModifyTask;

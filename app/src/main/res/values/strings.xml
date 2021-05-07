@@ -9,7 +9,7 @@
     <string name="urgency_label_high">High</string>
     <string name="submit_task">Save</string>
     <string name="instructions1">Tap task to mark done, again to undo</string>
-    <string name="instructions2">Double tap task to edit</string>
+    <string name="instructions2">Double tap to create or edit a task</string>
     <string name="instructions3">Tap and hold task to move it</string>
     <string name="instructions4">Importance: What if it weren\'t done?</string>
     <string name="instructions5">Urgency: What if it weren\'t done soon?</string>
