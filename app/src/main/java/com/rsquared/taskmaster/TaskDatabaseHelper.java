@@ -97,10 +97,10 @@ public class TaskDatabaseHelper extends SQLiteOpenHelper {
       while (!cursor.isAfterLast()) {
         long id = cursor.getLong(cursor.getColumnIndexOrThrow(_ID));
         String taskName = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NAME_TASK));
-        int importance = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_NAME_IMPORTANCE));
         int urgency = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_NAME_URGENCY));
+        int importance = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_NAME_IMPORTANCE));
         boolean completed = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_NAME_COMPLETED)) >= 1;
-        tasks.add(new Task(id, taskName, importance, urgency, completed));
+        tasks.add(new Task(id, taskName, urgency, importance, completed));
         cursor.moveToNext();
       }
     }
@@ -123,8 +123,8 @@ public class TaskDatabaseHelper extends SQLiteOpenHelper {
     // Create insert entries
     ContentValues values = new ContentValues();
     values.put(COLUMN_NAME_TASK, newTask.getLabel());
-    values.put(COLUMN_NAME_IMPORTANCE, newTask.getImportance());
     values.put(COLUMN_NAME_URGENCY, newTask.getUrgency());
+    values.put(COLUMN_NAME_IMPORTANCE, newTask.getImportance());
     values.put(COLUMN_NAME_COMPLETED, newTask.getCompleted());
 
     // Insert the new row, returning the primary key value of the new row
@@ -140,8 +140,8 @@ public class TaskDatabaseHelper extends SQLiteOpenHelper {
     // Match fields to new information
     ContentValues values = new ContentValues();
     values.put(COLUMN_NAME_TASK, task.getLabel());
-    values.put(COLUMN_NAME_IMPORTANCE, task.getImportance());
     values.put(COLUMN_NAME_URGENCY, task.getUrgency());
+    values.put(COLUMN_NAME_IMPORTANCE, task.getImportance());
     values.put(COLUMN_NAME_COMPLETED, task.getCompleted());
 
     // Update the database

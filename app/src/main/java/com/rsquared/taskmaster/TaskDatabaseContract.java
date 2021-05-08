@@ -24,8 +24,8 @@ public final class TaskDatabaseContract {
     // Define table and column names
     public static final String TABLE_NAME = "tasks";
     public static final String COLUMN_NAME_TASK = "task";
-    public static final String COLUMN_NAME_IMPORTANCE = "importance";
     public static final String COLUMN_NAME_URGENCY = "urgency";
+    public static final String COLUMN_NAME_IMPORTANCE = "importance";
     public static final String COLUMN_NAME_COMPLETED = "completed";
 
     // Define table creation query
@@ -39,10 +39,10 @@ public final class TaskDatabaseContract {
             + COLUMN_NAME_TASK
             + TEXT_TYPE
             + COMMA_SEP
-            + COLUMN_NAME_IMPORTANCE
+            + COLUMN_NAME_URGENCY
             + INT_TYPE
             + COMMA_SEP
-            + COLUMN_NAME_URGENCY
+            + COLUMN_NAME_IMPORTANCE
             + INT_TYPE
             + COMMA_SEP
             + COLUMN_NAME_COMPLETED

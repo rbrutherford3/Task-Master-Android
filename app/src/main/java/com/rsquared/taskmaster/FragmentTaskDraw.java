@@ -33,6 +33,7 @@ public class FragmentTaskDraw extends Fragment {
   private GroupPopup groupPopup; // Pop up element for groups of tasks
   private ImageView popupBackground; // Object for drawing pop up background
   private TaskViewModel taskViewModel; // For accessing and modifying task information
+  private final float scaleFactor = (float) 3; // How much bigger should the task appear while dragging?
 
   // Provide an instance of this class
   @Contract(" -> new")
@@ -177,8 +178,8 @@ public class FragmentTaskDraw extends Fragment {
 
               // Grab the location of the dropped task and assign new urgency and importance levels
               case DragEvent.ACTION_DROP:
-                float x = event.getX();
-                float y = event.getY();
+                float x = event.getX() - taskDraw.getCheckBoxSide();
+                float y = event.getY() - taskDraw.getCheckBoxSide();
                 int[] ratings = taskDraw.getRatings(x, y);
                 newTask.setUrgency(ratings[0]);
                 newTask.setImportance(ratings[1]);
@@ -297,7 +298,6 @@ public class FragmentTaskDraw extends Fragment {
   class MyDragShadowBuilder extends DragShadowBuilder {
 
     final Task movedTask;
-    final float scaleFactor = (float) 3;  // How much bigger should the task appear while dragging?
 
     public MyDragShadowBuilder(@NotNull Task task) {
       movedTask = task;
@@ -312,8 +312,8 @@ public class FragmentTaskDraw extends Fragment {
       float shadowHeight = scaleFactor * (touchArea.bottom - touchArea.top);
       // Needs to be slightly bigger than image to avoid flickering
       shadowSize.set((int) shadowWidth + 1, (int) shadowHeight + 1);
-      // Finger at bottom center:
-      shadowTouchPoint.set((int) shadowWidth / 2, (int) shadowHeight);
+      // Finger at bottom left corner:
+      shadowTouchPoint.set((int) (taskDraw.getCheckBoxSide() * 1.5 * scaleFactor), (int) shadowHeight);
     }
 
     @Override

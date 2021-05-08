@@ -707,4 +707,8 @@ public class TaskDraw extends View {
     }
     return msg.toString();
   }
+
+  public float getCheckBoxSide() {
+    return checkBoxSide;
+  }
 }
