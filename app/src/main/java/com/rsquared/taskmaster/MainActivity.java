@@ -78,36 +78,40 @@ public class MainActivity extends AppCompatActivity {
     FragmentTaskDraw fragmentTaskDraw = FragmentTaskDraw.newInstance();
     FragmentAddButton fragmentAddButton = FragmentAddButton.newInstance();
     FragmentInstructions fragmentInstructions = FragmentInstructions.newInstance();
+    FragmentCalvinQuote fragmentCalvinQuote = FragmentCalvinQuote.newInstance();
 
     // Keep track of which fragments are showing
     fragmentAddOrEdit = false;
 
     finalizeTransaction(
-        fragmentTransaction, fragmentTaskDraw, fragmentAddButton, fragmentInstructions);
+        fragmentTransaction, fragmentTaskDraw, fragmentAddButton, fragmentInstructions, fragmentCalvinQuote);
   }
 
   // Bring up a screen for a new task
   public void addTask() {
     FragmentTransaction fragmentTransaction = prepareTransaction();
     FragmentAddOrModifyTask fragmentAddOrModifyTask = newFragmentAddTask();
+    FragmentSmartGoals fragmentSmartGoals = FragmentSmartGoals.newInstance();
     fragmentAddOrEdit = true;
-    finalizeTransaction(fragmentTransaction, fragmentAddOrModifyTask);
+    finalizeTransaction(fragmentTransaction, fragmentAddOrModifyTask, fragmentSmartGoals);
   }
 
   // Bring up a screen for a new task with importance and urgency already established
   public void addTask(int urgency, int importance) {
     FragmentTransaction fragmentTransaction = prepareTransaction();
     FragmentAddOrModifyTask fragmentAddOrModifyTask = newFragmentAddTask(urgency, importance);
+    FragmentSmartGoals fragmentSmartGoals = FragmentSmartGoals.newInstance();
     fragmentAddOrEdit = true;
-    finalizeTransaction(fragmentTransaction, fragmentAddOrModifyTask);
+    finalizeTransaction(fragmentTransaction, fragmentAddOrModifyTask, fragmentSmartGoals);
   }
 
   // Bring up a screen for editing an existing task
   public void editTask(Task task) {
     FragmentTransaction fragmentTransaction = prepareTransaction();
     FragmentAddOrModifyTask fragmentAddOrModifyTask = newFragmentModifyTask(task);
+    FragmentSmartGoals fragmentSmartGoals = FragmentSmartGoals.newInstance();
     fragmentAddOrEdit = true;
-    finalizeTransaction(fragmentTransaction, fragmentAddOrModifyTask);
+    finalizeTransaction(fragmentTransaction, fragmentAddOrModifyTask, fragmentSmartGoals);
   }
 
   // PIECEMEAL PRIVATE METHODS FOR CHANGING FRAGMENTS (USED BY ABOVE METHODS)

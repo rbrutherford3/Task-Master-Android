@@ -3,57 +3,51 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    tools:context=".FragmentInstructions"
+    tools:context=".FragmentSmartGoals"
     android:layout_gravity="center"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:padding="10dp">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="10dp"
-            android:text="@string/instructions_header"
+            android:text="@string/smart_goals_header"
             android:textAppearance="@style/TextAppearance.AppCompat.Headline" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="10dp"
-            android:text="@string/instructions1"
+            android:text="@string/smart_goals1"
             android:textAppearance="@style/TextAppearance.AppCompat.Body2" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="10dp"
-            android:text="@string/instructions2"
+            android:text="@string/smart_goals2"
             android:textAppearance="@style/TextAppearance.AppCompat.Body2" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="10dp"
-            android:text="@string/instructions3"
+            android:text="@string/smart_goals3"
             android:textAppearance="@style/TextAppearance.AppCompat.Body2" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="10dp"
-            android:text="@string/instructions4"
+            android:text="@string/smart_goals4"
             android:textAppearance="@style/TextAppearance.AppCompat.Body2" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="10dp"
-            android:text="@string/instructions5"
-            android:textAppearance="@style/TextAppearance.AppCompat.Body2" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="10dp"
-            android:text="@string/instructions6"
+            android:text="@string/smart_goals5"
             android:textAppearance="@style/TextAppearance.AppCompat.Body2" />
 
 </LinearLayout>
