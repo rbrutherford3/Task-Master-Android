@@ -178,8 +178,8 @@ public class FragmentTaskDraw extends Fragment {
 
               // Grab the location of the dropped task and assign new urgency and importance levels
               case DragEvent.ACTION_DROP:
-                float x = event.getX() - taskDraw.getCheckBoxSide();
-                float y = event.getY() - taskDraw.getCheckBoxSide();
+                float x = event.getX();
+                float y = event.getY() - (TaskDraw.padding + TaskDraw.fontBottom) * scaleFactor;
                 int[] ratings = taskDraw.getRatings(x, y);
                 newTask.setUrgency(ratings[0]);
                 newTask.setImportance(ratings[1]);
@@ -258,10 +258,6 @@ public class FragmentTaskDraw extends Fragment {
                     touchedTask.setMoving(true);
                     MyDragShadowBuilder shadowBuilder = new MyDragShadowBuilder(touchedTask);
 
-                    // Grab a fake beginning location of the task on the canvas (to calculate new
-                    // importance and urgency after the task is dropped, need values to compare)
-                    taskDraw.getPixelCoordinates(touchedTask.getUrgency(), touchedTask.getImportance());
-
                     // Past a certain Android release, the function name changed
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                       taskDraw.startDragAndDrop(null, shadowBuilder, touchedTask, 0);
@@ -313,7 +309,7 @@ public class FragmentTaskDraw extends Fragment {
       // Needs to be slightly bigger than image to avoid flickering
       shadowSize.set((int) shadowWidth + 1, (int) shadowHeight + 1);
       // Finger at bottom left corner:
-      shadowTouchPoint.set((int) (taskDraw.getCheckBoxSide() * 1.5 * scaleFactor), (int) shadowHeight);
+      shadowTouchPoint.set(0, (int) shadowHeight);
     }
 
     @Override

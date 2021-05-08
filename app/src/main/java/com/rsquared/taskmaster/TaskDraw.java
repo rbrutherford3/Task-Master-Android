@@ -34,7 +34,7 @@ public class TaskDraw extends View {
   protected static final float strokeCheckmark = 10; // thickness of check mark
   protected static final float arrowLength = 50;
   protected static final float arrowPointLength = 20;
-  protected static final float maxNudgeRatio = (float) 0.10; // Only nudge up to 10% importance
+  protected static final float maxNudgeRatio = (float) 0.25; // Only nudge up to 25% importance
   protected static final String labelHorizontal = "URGENCY";
   protected static final String labelVertical = "IMPORTANCE";
   // Paint objects used for drawing on canvas
@@ -44,18 +44,18 @@ public class TaskDraw extends View {
 
   // Values for vertical and horizontal labels
   protected Paint paintAxisLabels;
-  protected float margin; // margin inner + |fontTop| + outer margin
-  protected float fontTop; // distance between baseline and highest point in text (-)
-  protected float fontBottom; // distance between baseline and lowest point in text (+)
-  protected float labelVerticalDeltaX;
-  protected float labelVerticalDeltaY;
-  protected float labelHorizontalDeltaX;
-  protected float labelHorizontalDeltaY;
-  protected float[][][] arrowHorizontal;
-  protected float[][][] arrowVertical;
+  protected static float margin; // margin inner + |fontTop| + outer margin
+  protected static float fontTop; // distance between baseline and highest point in text (-)
+  protected static float fontBottom; // distance between baseline and lowest point in text (+)
+  protected static float labelVerticalDeltaX;
+  protected static float labelVerticalDeltaY;
+  protected static float labelHorizontalDeltaX;
+  protected static float labelHorizontalDeltaY;
+  protected static float[][][] arrowHorizontal;
+  protected static float[][][] arrowVertical;
   // Canvas dimensions (should be the same -> square)
-  protected float widthCanvas;
-  protected float heightCanvas;
+  protected static float widthCanvas;
+  protected static float heightCanvas;
 
   // Store a taskViewModel passed in from MainActivity, because views cannot initiate view models
   private TaskViewModel taskViewModel;
@@ -299,22 +299,15 @@ public class TaskDraw extends View {
 
     // See if contents should be on left or right of origin
     if (x + width > widthCanvas - margin) {
-      rectRight = x;
-      rectLeft = x - checkBoxSide;
-      checkBoxStart = rectLeft;
-      textRight = rectLeft - spacing;
-      textLeft = textRight - textWidth;
-      left = textLeft;
-      right = rectRight;
-    } else {
-      rectLeft = x;
-      rectRight = x + checkBoxSide;
-      checkBoxStart = rectLeft;
-      textLeft = rectRight + spacing;
-      textRight = textLeft + textWidth;
-      left = rectLeft;
-      right = textRight;
+      x = widthCanvas - margin - width;
     }
+    rectLeft = x;
+    rectRight = x + checkBoxSide;
+    checkBoxStart = rectLeft;
+    textLeft = rectRight + spacing;
+    textRight = textLeft + textWidth;
+    left = rectLeft;
+    right = textRight;
 
     Rect touchArea = new Rect((int) left, (int) top, (int) right, (int) bottom);
 
@@ -327,6 +320,7 @@ public class TaskDraw extends View {
 
   // This function moves ("nudges") individual tasks that overlap so they are next to each other
   // but not overlapping.
+  // Todo: change code so that tasks can fit in the negative spaces of task groups
   protected boolean nudgeTasks(@NotNull TaskGroup taskGroup, boolean forceNudge) {
 
     // Get the position on the canvas for the given task
@@ -587,7 +581,7 @@ public class TaskDraw extends View {
     // Pull the pre-determined position information for the task
     float yBaseline;
     if (center) {
-      yBaseline = canvas.getHeight();
+      yBaseline = canvas.getHeight()-scaleFactor*(padding + fontBottom);
     }
     else {
       yBaseline = graphic.getBaseline();
@@ -706,9 +700,5 @@ public class TaskDraw extends View {
       msg.append("EMPTY DATABASE");
     }
     return msg.toString();
-  }
-
-  public float getCheckBoxSide() {
-    return checkBoxSide;
   }
 }
