@@ -103,6 +103,7 @@ public class FragmentTaskDraw extends Fragment {
                   if (touchedTask != null) {
                     touchedTask.setCompleted(!touchedTask.getCompleted());
                     taskViewModel.updateTask(touchedTask);
+                    taskDraw.invalidate(); // update image
                   }
 
                   // If tapping a group, then show the group popup
@@ -113,7 +114,6 @@ public class FragmentTaskDraw extends Fragment {
                     groupPopup.invalidate();
                   }
 
-                  taskDraw.invalidate(); // update image
                   return true; // necessary to prevent further action resulting from tap
                 }
 

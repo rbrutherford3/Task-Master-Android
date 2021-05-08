@@ -11,10 +11,19 @@
     <string name="instructions1">Tap task to mark done, again to undo</string>
     <string name="instructions2">Double tap to create or edit a task</string>
     <string name="instructions3">Tap and hold task to move it</string>
-    <string name="instructions4">Importance: What if it weren\'t done?</string>
-    <string name="instructions5">Urgency: What if it weren\'t done soon?</string>
+    <string name="instructions4">Rotate screen for more detailed view</string>
+    <string name="instructions5">Importance: What if it weren\'t done?</string>
+    <string name="instructions6">Urgency: What if it weren\'t done soon?</string>
     <string name="add_task">Add Task</string>
     <string name="instructions_header">Instructions:</string>
     <string name="content_description">Popup window for grouped tasks</string>
     <string name="rotate_screen">Rotate Screen</string>
+    <string name="smart_goals_header">SMART goals:</string>
+    <string name="smart_goals1">S - simple</string>
+    <string name="smart_goals2">M - measurable</string>
+    <string name="smart_goals3">A - attainable</string>
+    <string name="smart_goals4">R - relevant</string>
+    <string name="smart_goals5">T - time bound</string>
+    <string name="calvin_quote">\"God put me on this Earth to accomplish a certain number of things…
+        Right now I am so far behind that I will never die\"</string>
 </resources>
