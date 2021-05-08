@@ -1,8 +1,9 @@
 package com.rsquared.taskmaster;
 
 import android.annotation.SuppressLint;
+import android.content.pm.ActivityInfo;
+import android.os.Build;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -157,5 +158,30 @@ public class MainActivity extends AppCompatActivity {
       fragmentTransaction.add(R.id.linear_layout_placeholder, fragment);
     }
     fragmentTransaction.commit();
+  }
+
+  // Swap rotation between landscape and portrait, or none
+  // Taken from: https://stackoverflow.com/a/18268446
+  @SuppressLint({"SourceLockedOrientationActivity", "SwitchIntDef"})
+  public void rotate() {
+    switch (getResources().getConfiguration().orientation) {
+      case android.content.res.Configuration.ORIENTATION_PORTRAIT:
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+          setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE);
+        } else {
+          setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        }
+        break;
+      case android.content.res.Configuration.ORIENTATION_LANDSCAPE:
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+          setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT);
+        } else {
+          setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        }
+        break;
+      case android.content.res.Configuration.ORIENTATION_UNDEFINED:
+      default:
+        break;
+    }
   }
 }

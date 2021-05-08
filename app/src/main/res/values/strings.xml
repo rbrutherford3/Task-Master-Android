@@ -16,4 +16,5 @@
     <string name="add_task">Add Task</string>
     <string name="instructions_header">Instructions:</string>
     <string name="content_description">Popup window for grouped tasks</string>
+    <string name="rotate_screen">Rotate Screen</string>
 </resources>
