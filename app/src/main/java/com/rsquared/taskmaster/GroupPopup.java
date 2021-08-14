@@ -21,6 +21,8 @@ public class GroupPopup extends TaskDraw {
   private static final int padding = 20; // dp
   private static final int borderColor = 0xFF000000;
   private static final int borderThickness = 2;
+  private static float heightPopup;
+  private static float widthPopup;
   private TaskGroup taskGroup;
 
   // Inherit constructor from parent
@@ -68,8 +70,8 @@ public class GroupPopup extends TaskDraw {
       }
 
       // Translate the values gathered into canvas dimensions (with a little bit of a margin)
-      widthCanvas = rightest - leftest + 2*marginInner;
-      heightCanvas = lowest - highest + 2*marginInner;
+      widthPopup = rightest - leftest + 2*marginInner;
+      heightPopup = lowest - highest + 2*marginInner;
 
       // Translate values into uniform displacement to the origin, and move
       float deltaX = -leftest + marginInner;
@@ -108,8 +110,8 @@ public class GroupPopup extends TaskDraw {
     // Determine background color of popup based on group location on taskDraw
     int backgroundColor = getColor(taskGroup.getImportance(), taskGroup.getUrgency());
     FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) this.getLayoutParams();
-    params.height = (int) heightCanvas;
-    params.width = (int) widthCanvas;
+    params.height = (int) heightPopup;
+    params.width = (int) widthPopup;
     setLayoutParams(params);
     GradientDrawable gradientDrawable = new GradientDrawable();
     gradientDrawable.setShape(GradientDrawable.RECTANGLE);
