@@ -77,7 +77,7 @@ Holds all the information for the SQLite database: table names, field names, que
 
 ### `TaskDatabaseHelper.java`
 
-Provides mathods for interacting with the database using information from `TaskDatabaseContract` and data from `TaskViewModel`
+Provides methods for interacting with the database using information from `TaskDatabaseContract` and data from `TaskViewModel`
 
 ### `TaskViewModel.java`
 
@@ -85,11 +85,11 @@ This is a `ViewModel` that can be accessed anywhere and survives the lifecycle o
 
 ### `TaskDraw.java`
 
-This large class is the heart of the program and contains all the methods and informatino necessary for constructing a Java AWT canvas and displaying the current `Task` and `TaskGroup` information.  It basically draws everything necessary for the display.
+This large class is the heart of the program and contains all the methods and information necessary for constructing a Java AWT canvas and displaying the current `Task` and `TaskGroup` information.  It basically draws everything necessary for the display.
 
 ### `GroupPopup.java`
 
-In case the the canvas in `TaskDraw` becomes too crowded in any given area, tha `Task` objects are combined into a `TaskGroup`, which, when tappped, shows the popup object provided by this class to display the individual tasks in the group.  For example:
+In case the the canvas in `TaskDraw` becomes too crowded in any given area, tha `Task` objects are combined into a `TaskGroup`, which, when tapped, shows the popup object provided by this class to display the individual tasks in the group.  For example:
 
 ![alt text](screen_shot_popup.gif "Screen shot")
 
@@ -101,21 +101,21 @@ If you wish to perform some tests on the system, there is a function in `MainAct
 
 ### Example tests
 
-Here are some examples of tests that were performed on this app prior to commiting it:
+Here are some examples of tests that were performed on this app prior to committing it:
 
 * Creating a new task using the `Add Task` button
-* Marking a task as complete by tapping it, then closing the app and reopening it to make sure it's dissapeared
+* Marking a task as complete by tapping it, then closing the app and reopening it to make sure it's disappeared
 * Modifying a task by double tapping or tapping and holding it
 * Create tasks close to boundaries (0% or 100% importance and urgency)
 * Creating many tasks in the same vicinity and making sure the app replaces it with `+(# of tasks) Tasks`, a group of tasks graphic
 * Make sure the background color of a popup for a group of tasks is appropriate for it's location (i.e.: background at that location is red, so the background color of the popup for a group of tasks has the same color, or close to it)
-* Given a group of tasks, try adding a task to the group, moving a task out of the group, and marking a task within a group popup as completed and then restarting to see if it dissapeared as expected
+* Given a group of tasks, try adding a task to the group, moving a task out of the group, and marking a task within a group popup as completed and then restarting to see if it disappeared as expected
 * Rotate the view while the app is running
 * Turn off screen while the app is running and turn it on again
 
 ## Deployment
 
-This app is avaialable for download on [Google Play](https://play.google.com/store/apps/details?id=com.rsquared.taskmaster)
+This app is available for download on [Google Play](https://play.google.com/store/apps/details?id=com.rsquared.taskmaster)
 
 ## Built With
 
@@ -140,5 +140,5 @@ This project is licensed under the MIT License - see the [LICENSE.txt](LICENSE.t
 ## Acknowledgments
 
 * Thanks to Stephen Covey, author of *7 Habits Of Highly Effective People*, for providing the inspiration and knowledge to spark the idea for this app
-* My family for supporting my continued efforts at software developement
+* My family for supporting my continued efforts at software development
 * My friend Victor for patiently talking me through a lot of my blunders with Android Studio and coding in general
