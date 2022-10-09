@@ -1,6 +1,6 @@
 # Task Master
 
-![logo](app/src/main/ic_launcher-playstore.png)
+![logo](../app/src/main/ic_launcher-playstore.png)
 
 Task Master is an Android application that functions as a to-do list.  Unlike regular to-do lists, this application incorporates user-defined importance and urgency levels to create a colored visualization.  More important tasks rise to the top, and more urgent tasks go to the left.  The upper-left corner is red (high importance and urgency) and the lower-right corner is green (low importance and urgency).  This setup was inspired by the book *Seven Habits of Highly Effective People* by Stephen Covey.
 
@@ -10,11 +10,11 @@ This app is to make a task list appear more manageable by having all tasks displ
 
 ## Getting Started
 
-To work on this project, simply [clone it](https://github.com/robbie9485/Task-Master.git) onto your hard drive.  The bulk of the code is in the directory [`app/src/main`](https://github.com/robbie9485/Task-Master/tree/master/app/src/main).  Note that the [java files](https://github.com/robbie9485/Task-Master/tree/master/app/src/main/java/com/rsquared/taskmaster) were all written for this project, but not all of the [XML files](https://github.com/robbie9485/Task-Master/tree/master/app/src/main/res) were, so use care when navigating this folder.  The following folders contain custom XML files:
+To work on this project, simply [clone it](https://github.com/rbrutherford3/Task-Master.git) onto your hard drive.  The bulk of the code is in the directory [`app/src/main`](https://github.com/rbrutherford3/Task-Master/tree/master/app/src/main).  Note that the [java files](https://github.com/rbrutherford3/Task-Master/tree/master/app/src/main/java/com/rsquared/taskmaster) were all written for this project, but not all of the [XML files](https://github.com/rbrutherford3/Task-Master/tree/master/app/src/main/res) were, so use care when navigating this folder.  The following folders contain custom XML files:
 
-* [`drawable`](https://github.com/robbie9485/Task-Master/tree/master/app/src/main/res/drawable)
-* [`layout`](https://github.com/robbie9485/Task-Master/tree/master/app/src/main/res/layout)
-* [`values`](https://github.com/robbie9485/Task-Master/tree/master/app/src/main/res/values)
+* [`drawable`](https://github.com/rbrutherford3/Task-Master/tree/master/app/src/main/res/drawable)
+* [`layout`](https://github.com/rbrutherford3/Task-Master/tree/master/app/src/main/res/layout)
+* [`values`](https://github.com/rbrutherford3/Task-Master/tree/master/app/src/main/res/values)
 
 ### Prerequisites
 
@@ -27,7 +27,7 @@ Assuming you have Android Studio up and running, you can do the following to get
 1. Open Android Studio
 2. Go to `File` menu and then click `Close` if you have another project showing
 3. Click `Get from Version Control`
-4. Enter `https://github.com/robbie9485/Task-Master.git` into the `URL` field
+4. Enter `https://github.com/rbrutherford3/Task-Master.git` into the `URL` field
 5. Select a location on your hard drive to house the project under `Directory`
 6. Click `Clone`
 
@@ -123,7 +123,7 @@ This app is available for download on [Google Play](https://play.google.com/stor
 
 ## Contributing
 
-Please contact me (robbie9485) on GitHub in order to inquire more about the project.
+Please contact me (rbrutherford3) on GitHub in order to inquire more about the project.
 
 ## Versioning
 
@@ -135,7 +135,7 @@ Robert Rutherford
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.txt](LICENSE.txt) file for details
+This project is licensed under the MIT License - see the [LICENSE](../LICENSE) file for details
 
 ## Acknowledgments
 
